@@ -1,16 +1,36 @@
 # ISL Translator — Frontend
 
-This is the frontend portion of the ISL Translator group project.
+This project is the Vite + React frontend for the ISL Translator app.
+
+It currently includes:
+- a dark/light theme toggle
+- a history button with quick greeting shortcuts
+- English + Tamil phrase matching for local demo greeting videos
+- a local video output viewer using files inside the public folder
+- a responsive interface for the prototype build
 
 ## 1. Requirements
 
-Install Node.js first. Current Vite documentation requires a modern Node.js version; if npm gives a version warning, update Node.js.
+Make sure you have Node.js installed.
 
-## 2. Open in VS Code
+Check:
 
-1. Extract this ZIP.
-2. Open the extracted `isl-translator-frontend` folder in VS Code.
-3. Open **Terminal → New Terminal**.
+```bash
+node -v
+npm -v
+```
+
+If needed, install a recent LTS version of Node.js.
+
+## 2. Open the project
+
+From the project root, open the frontend folder in VS Code:
+
+```bash
+cd frontend
+```
+
+Then open a terminal inside that folder.
 
 ## 3. Install dependencies
 
@@ -20,118 +40,127 @@ Run:
 npm install
 ```
 
-## 4. Start the website
+## 4. Run the web app
 
-Run:
+Start the local dev server:
 
 ```bash
 npm run dev
 ```
 
-Open the local URL shown by Vite, usually:
+Then open the local URL printed in the terminal, usually:
 
 ```text
 http://localhost:5173
 ```
 
-## 5. What is already implemented?
+## 5. Project structure
 
-- Navbar with **ISL TRANSLATOR**
-- History icon
-- Centered hero text
-- Rounded main text input
-- `+` button
-- Creative toggle
-- Auto styling toggle
-- Greetings floating card
-- Clicking a greeting fills the input automatically
-- Submit/arrow button
-- Loading state
-- Output viewer placeholder for the future 3D/video result
-- Responsive layout for laptop and mobile screens
-- Tailwind CSS v4 using the Vite plugin
+```text
+frontend/
+  public/
+    videos/
+      Hello.mp4
+      Good_Morning.mp4
+      How_are_you.mp4
+      Nice_to_meet_you.mp4
+      Good_night.mp4
+      Bye.mp4
+  src/
+    App.jsx
+    index.css
+    main.jsx
+  index.html
+  package.json
+  vite.config.js
+  README.md
+```
 
-## 6. Connecting Member 2's backend
+## 6. Local demo behavior
 
-The frontend sends a POST request to:
+This frontend is currently designed to work without an external API.
+
+It matches common greetings such as:
+- Hello / வணக்கம்
+- Good morning / காலை வணக்கம்
+- How are you? / நீங்கள் எப்படி இருக்கிறீர்கள்?
+- Nice to meet you / சந்திப்பதில் மகிழ்ச்சி
+- Good night / நல்ல இரவு
+- Bye / விடை
+
+and then plays the correct local MP4 file from the public folder.
+
+## 7. Offline mode
+
+This frontend works fully offline for the current demo version.
+
+You do not need internet access, a database, or a backend service to run it locally because:
+- the app is a local Vite + React project
+- the greeting videos are stored in `frontend/public/videos`
+- the phrase matching is handled in the frontend itself
+
+So you can run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+and the app will work without connecting to any external API.
+
+The only fetch request in the code is optional and is only used if you later connect a real backend.
+
+## 8. If you want to connect a real backend later
+
+The app still has a fetch call in `src/App.jsx` to:
 
 ```text
 http://localhost:8000/translate
 ```
 
-with JSON like:
+You can override it with a `.env` file:
 
-```json
-{
-  "text": "Hello",
-  "creative": false,
-  "autoStyling": false
-}
+```env
+VITE_TRANSLATE_API_URL=http://localhost:8000/translate
 ```
 
-The frontend currently expects a JSON response containing either:
-
-```json
-{
-  "translation": "..."
-}
-```
-
-or:
-
-```json
-{
-  "result": "..."
-}
-```
-
-### If Member 2 uses another URL
-
-Create a `.env` file in the project root:
-
-```text
-VITE_TRANSLATE_API_URL=http://localhost:YOUR_PORT/YOUR_ENDPOINT
-```
-
-Then restart `npm run dev`.
-
-### If Member 2's API has a different request/response format
-
-Only edit the `handleSubmit()` function in:
-
-```text
-src/App.jsx
-```
-
-The UI does not need to be rewritten.
-
-## 7. Files you should send to your friend
-
-Send the complete ZIP/project folder. The important files are:
-
-```text
-src/
-  App.jsx
-  index.css
-  main.jsx
-index.html
-package.json
-vite.config.js
-README.md
-```
-
-Do NOT send `node_modules` because your friend can recreate it with:
+Then restart the app:
 
 ```bash
-npm install
+npm run dev
 ```
 
-## 8. Team handoff message
+## 9. Build for production
 
-You can send this to your friend:
+To create a production build:
 
-> I completed the frontend for the ISL Translator. Extract the ZIP, open the folder in VS Code, run `npm install`, then `npm run dev`. The UI is ready and the `handleSubmit()` function in `src/App.jsx` is prepared for the backend. The frontend currently sends POST `/translate` with the text and UI options. Please tell me your exact backend endpoint and request/response format if it is different, and I can adjust the integration.
+```bash
+npm run build
+```
 
-## Important
+To preview it locally:
 
-The output viewer is intentionally a placeholder. Your teammate can later replace the inside of the **ISL Output** section with the actual 3D/video/canvas component without changing the rest of the interface.
+```bash
+npm run preview
+```
+
+## 10. Useful notes
+
+- Keep all video files inside `frontend/public/videos` so Vite serves them correctly.
+- If you add more MP4 files, update the phrase-to-video mapping in `src/App.jsx`.
+- The project is currently a frontend prototype and not yet connected to a real database or AI translation backend.
+
+## 11. Quick start summary
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then visit:
+
+```text
+http://localhost:5173
+```

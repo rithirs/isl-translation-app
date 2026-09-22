@@ -11,16 +11,39 @@ const apiKey: string = process.env.GEMINI_API_KEY ?? (() => {
 const genAI = new GoogleGenAI({ apiKey });
 const GLOSS_MODEL = 'gemini-3.6-flash';
 const VIDEO_MODEL = 'veo-2.0-generate-001';
+const MAX_TRANSIENT_RETRIES = 3;
+
+function isTransientGeminiError(error: unknown): boolean {
+  const details = error instanceof Error ? error.message : JSON.stringify(error);
+  return /503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|temporarily|high demand/iu.test(details);
+}
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function withTransientRetry<T>(operation: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isTransientGeminiError(error) || attempt >= MAX_TRANSIENT_RETRIES) throw error;
+      const delay = 1500 * 2 ** attempt;
+      console.warn(`Gemini temporary capacity error; retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_TRANSIENT_RETRIES})`);
+      await wait(delay);
+    }
+  }
+}
 
 export async function extractISLGloss(
   inputText: string,
   language: TranslationLanguage,
 ): Promise<string[]> {
-  const response = await genAI.models.generateContent({
+  const response = await withTransientRetry(() => genAI.models.generateContent({
     model: GLOSS_MODEL,
     contents: buildISLGlossSystemPrompt(inputText, language),
     config: { responseMimeType: 'application/json' },
-  });
+  }));
 
   const raw = response.text?.trim();
   if (!raw) return inputText.split(/\s+/u).map((word) => word.toUpperCase());
@@ -43,7 +66,7 @@ export async function extractISLGloss(
 }
 
 export async function generateSigningVideo(promptText: string): Promise<Buffer> {
-  let operation = await genAI.models.generateVideos({
+  let operation = await withTransientRetry(() => genAI.models.generateVideos({
     model: VIDEO_MODEL,
     prompt: promptText,
     config: {
@@ -52,7 +75,7 @@ export async function generateSigningVideo(promptText: string): Promise<Buffer> 
       durationSeconds: 5,
       personGeneration: 'allow_adult',
     },
-  });
+  }));
 
   for (let attempt = 0; attempt < 18 && !operation.done; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, 10_000));

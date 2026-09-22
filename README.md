@@ -104,6 +104,8 @@ cd server
 pnpm run dev
 ```
 
+For a physical phone, keep the phone and computer on the same Wi-Fi network. The mobile app automatically uses the computer's Expo development host for API requests. If automatic discovery is unavailable, set `EXPO_PUBLIC_API_URL` to your computer's LAN address, for example `http://192.168.1.20:5000/api`.
+
 The API runs at `http://localhost:5000`. Check it with:
 
 ```bash

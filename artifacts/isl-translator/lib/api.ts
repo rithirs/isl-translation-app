@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000/api';
+const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? `http://${expoHost ?? 'localhost'}:5000/api`;
 const DEVICE_KEY = '@isl-translator/device-id';
 
 export interface TranslationItem {

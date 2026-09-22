@@ -45,6 +45,8 @@ const colors = {
     // Destructive actions (delete, error states)
     destructive: '#A85C4A',
     destructiveForeground: '#ffffff',
+    success: '#2F7D62',
+    successSoft: '#E6F2EC',
 
     // Borders and input outlines
     border: '#E7DED5',
@@ -67,6 +69,8 @@ const colors = {
     accentForeground: '#F8F4EF',
     destructive: '#D48672',
     destructiveForeground: '#102D2E',
+    success: '#8CC9A8',
+    successSoft: '#1F4B43',
     border: '#31595A',
     input: '#31595A',
   },

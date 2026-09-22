@@ -29,7 +29,10 @@ export default function TranslateScreen() {
       return;
     }
 
-    Alert.alert('Ready to translate', `We’ll translate “${text.trim()}” into ISL.`);
+    router.push({
+      pathname: '/output',
+      params: { message: text.trim() },
+    });
   };
 
   return (

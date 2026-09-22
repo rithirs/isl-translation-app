@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import {
   Alert,
   Platform,
@@ -17,19 +18,33 @@ const DEFAULT_MESSAGE = 'Good morning';
 
 export default function OutputScreen() {
   const insets = useSafeAreaInsets();
-  const { message } = useLocalSearchParams();
+  const { message, videoUrl, signSequence } = useLocalSearchParams();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const styles = useMemo(() => createStyles(colors.light), []);
 
   const rawMessage = Array.isArray(message) ? message[0] : message;
   const displayMessage = rawMessage?.trim() || DEFAULT_MESSAGE;
+  const rawVideoUrl = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
+  const rawSequence = Array.isArray(signSequence) ? signSequence[0] : signSequence;
+  const player = useVideoPlayer(rawVideoUrl || null, (videoPlayer) => {
+    videoPlayer.loop = false;
+  });
   const signWords = displayMessage
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 4)
     .map((word) => word.replace(/[^\p{L}\p{N}'-]/gu, '').toUpperCase())
     .filter(Boolean);
+  let sequenceWords = signWords;
+  if (rawSequence) {
+    try {
+      const parsedSequence = JSON.parse(rawSequence);
+      if (Array.isArray(parsedSequence)) sequenceWords = parsedSequence;
+    } catch {
+      sequenceWords = signWords;
+    }
+  }
 
   const handlePlay = () => {
     setIsPlaying((current) => !current);
@@ -77,23 +92,24 @@ export default function OutputScreen() {
             accessibilityLabel={isPlaying ? 'Pause ISL video preview' : 'Play ISL video preview'}
             accessibilityRole="button"
             activeOpacity={0.9}
-            onPress={handlePlay}
+            onPress={() => { if (rawVideoUrl) { player.playing ? player.pause() : player.play(); } else handlePlay(); }}
             style={styles.videoCard}
             testID="isl-video-preview"
           >
-            <View style={[styles.playButton, isPlaying && styles.playButtonActive]}>
+            {rawVideoUrl ? <VideoView player={player} style={styles.video} contentFit="contain" nativeControls /> : null}
+            {!rawVideoUrl ? <View style={[styles.playButton, isPlaying && styles.playButtonActive]}>
               <Feather
                 name={isPlaying ? 'pause' : 'play'}
                 size={26}
                 color={colors.light.primaryForeground}
                 style={isPlaying ? undefined : styles.playIcon}
               />
-            </View>
+            </View> : null}
             <View style={styles.videoLabel}>
               <Feather name="video" size={14} color="rgba(255,255,255,0.82)" />
               <Text style={styles.videoLabelText}>ISL Video Preview</Text>
             </View>
-            {isPlaying ? <Text style={styles.playingText}>Playing preview</Text> : null}
+            {isPlaying || rawVideoUrl ? <Text style={styles.playingText}>Playing preview</Text> : null}
           </TouchableOpacity>
 
           <View style={styles.statusRow}>
@@ -140,7 +156,7 @@ export default function OutputScreen() {
           </View>
 
           <View style={styles.chipRow}>
-            {signWords.map((word) => (
+            {(Array.isArray(sequenceWords) ? sequenceWords : signWords).map((word) => (
               <View key={word} style={styles.signChip}>
                 <Text style={styles.signChipText}>[{word}]</Text>
               </View>
@@ -213,6 +229,10 @@ function createStyles(palette) {
       marginTop: 20,
       overflow: 'hidden',
       position: 'relative',
+      width: '100%',
+    },
+    video: {
+      height: '100%',
       width: '100%',
     },
     playButton: {

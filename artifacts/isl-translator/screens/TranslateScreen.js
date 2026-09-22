@@ -13,6 +13,9 @@ import {
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import colors from '@/constants/colors';
+import { api } from '@/lib/api';
+import TranslationProgressModal from '@/components/TranslationProgressModal';
+import { StatusToast, classifyApiError } from '@/components/StatusToast';
 
 const MAX_CHARACTERS = 500;
 
@@ -21,22 +24,34 @@ const recentSearches = ['Good morning', 'Thank you'];
 export default function TranslateScreen() {
   const insets = useSafeAreaInsets();
   const [text, setText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [translationError, setTranslationError] = useState(null);
+  const [showFailure, setShowFailure] = useState(false);
   const styles = useMemo(() => createStyles(colors.light), []);
 
-  const handleTranslate = () => {
+  const handleTranslate = async () => {
     if (!text.trim()) {
       Alert.alert('Add a message', 'Type something in English or Tamil to translate.');
       return;
     }
-
-    router.push({
-      pathname: '/output',
-      params: { message: text.trim() },
-    });
+    if (text.trim().length > MAX_CHARACTERS) return;
+    setTranslationError(null);
+    setIsSubmitting(true);
+    try {
+      const result = await api.translate(text.trim());
+      router.push({ pathname: '/output', params: { message: text.trim(), videoUrl: result.videoUrl, signSequence: JSON.stringify(result.signSequence), translationId: result.translationId } });
+    } catch (error) {
+      setTranslationError(classifyApiError(error));
+      setShowFailure(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <View style={styles.screen}>
+      {translationError && !showFailure ? <StatusToast kind={translationError} onDismiss={() => setTranslationError(null)} /> : null}
+      <TranslationProgressModal visible={isSubmitting || showFailure} failed={showFailure} onRetry={() => { setShowFailure(false); handleTranslate(); }} onDismiss={() => setShowFailure(false)} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <KeyboardAwareScrollViewCompat
           bottomOffset={24}

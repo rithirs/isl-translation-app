@@ -18,6 +18,7 @@ export interface TranslationItem {
 export interface HistoryItem { id: string; viewed_at: string; videoUrl?: string; translation?: TranslationItem; }
 export interface SavedItem { id: string; created_at: string; videoUrl?: string; translation?: TranslationItem; }
 export interface SignItem { id: string; word: string; category: string; description: string | null; videoUrl: string; }
+export interface TranslationResult { cached: boolean; status: string; translationId: string; videoUrl: string; signSequence: string[]; }
 
 export async function getDeviceId(): Promise<string> {
   const existing = await AsyncStorage.getItem(DEVICE_KEY);
@@ -34,6 +35,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  translate: (text: string, language: 'en' | 'ta' = 'en') => request<TranslationResult>('/translate', { method: 'POST', body: JSON.stringify({ text, language }) }),
   history: async () => request<HistoryItem[]>(`/history?userId=${encodeURIComponent(await getDeviceId())}`),
   recordHistory: async (translationId: string) => request('/history', { method: 'POST', body: JSON.stringify({ userId: await getDeviceId(), translationId }) }),
   saved: async () => request<SavedItem[]>(`/saved?userId=${encodeURIComponent(await getDeviceId())}`),

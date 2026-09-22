@@ -26,6 +26,7 @@ function RootLayoutNav() {
       <Stack.Screen name="translate" options={{ headerShown: false }} />
       <Stack.Screen name="output" options={{ headerShown: false }} />
       <Stack.Screen name="learn" options={{ headerShown: false }} />
+      <Stack.Screen name="history" options={{ headerShown: false }} />
     </Stack>
   );
 }

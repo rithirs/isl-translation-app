@@ -1,0 +1,25 @@
+{
+  "name": "isl-translator-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.21.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.1",
+    "@types/node": "^24.5.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2"
+  }
+}

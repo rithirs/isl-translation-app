@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/isl-translator/"
+title = "ISL Translator"
+description = "A warm, accessible Indian Sign Language translator mobile app home screen for translating English or Tamil into ISL, revisiting recent phrases, and learning sign language."
+version = "1.0.0"
+id = "artifacts/isl-translator"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/isl-translator/" ]
+localPort = 18591
+
+[services.development]
+run = "pnpm --filter @workspace/isl-translator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/isl-translator", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/isl-translator", "run", "serve" ]
+
+[services.env]
+PORT = "18591"
+BASE_PATH = "/isl-translator/"

@@ -27,7 +27,7 @@ npm install --global pnpm@10.12.1
 
 ## Open the mobile app
 
-Start the local Expo server:
+Start the Expo server in LAN mode for a physical phone:
 
 ```bash
 pnpm --filter @workspace/isl-translator run dev:local
@@ -72,7 +72,7 @@ If Expo reports `EADDRINUSE` for port `8081`, stop the existing Metro process or
 ```bash
 lsof -nP -iTCP:8081 -sTCP:LISTEN
 kill <process-id>
-pnpm --filter @workspace/isl-translator exec expo start --localhost --port 8082
+pnpm --filter @workspace/isl-translator exec expo start --lan --port 8082
 ```
 
 ## Run the backend API
@@ -87,7 +87,7 @@ cp .env.example .env
 Fill in these values in `.env`:
 
 ```text
-PORT=5000
+PORT=5050
 SUPABASE_URL=your-supabase-project-url
 SUPABASE_SERVICE_ROLE_KEY=your-server-only-service-role-key
 GEMINI_API_KEY=your-gemini-api-key
@@ -106,10 +106,10 @@ pnpm run dev
 
 For a physical phone, keep the phone and computer on the same Wi-Fi network. The mobile app automatically uses the computer's Expo development host for API requests. If automatic discovery is unavailable, set `EXPO_PUBLIC_API_URL` to your computer's LAN address, for example `http://192.168.1.20:5000/api`.
 
-The API runs at `http://localhost:5000`. Check it with:
+The API runs at `http://localhost:5050`. Check it with:
 
 ```bash
-curl http://localhost:5000/health
+curl http://localhost:5050/health
 ```
 
 Expected response:
@@ -151,7 +151,7 @@ Run the live integration pipeline checks against a configured local API:
 
 ```bash
 cd server
-TEST_BASE_URL=http://localhost:5000 pnpm run test:pipeline
+TEST_BASE_URL=http://localhost:5050 pnpm run test:pipeline
 ```
 
 The pipeline test covers first generation, exact and punctuation-normalized cache hits, distinct phrases, concurrent deduplication, and invalid input handling. Cache-miss cases require valid Gemini credentials, Supabase credentials, the database migrations, and the `isl-videos` bucket.

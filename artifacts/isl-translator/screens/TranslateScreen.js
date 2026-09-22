@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Platform,
@@ -27,7 +27,15 @@ export default function TranslateScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [translationError, setTranslationError] = useState(null);
   const [showFailure, setShowFailure] = useState(false);
+  const isMounted = useRef(false);
   const styles = useMemo(() => createStyles(colors.light), []);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const handleTranslate = async () => {
     if (!text.trim()) {
@@ -39,12 +47,14 @@ export default function TranslateScreen() {
     setIsSubmitting(true);
     try {
       const result = await api.translate(text.trim());
+      if (!isMounted.current) return;
       router.push({ pathname: '/output', params: { message: text.trim(), videoUrl: result.videoUrl, signSequence: JSON.stringify(result.signSequence), translationId: result.translationId } });
     } catch (error) {
+      if (!isMounted.current) return;
       setTranslationError(classifyApiError(error));
       setShowFailure(true);
     } finally {
-      setIsSubmitting(false);
+      if (isMounted.current) setIsSubmitting(false);
     }
   };
 

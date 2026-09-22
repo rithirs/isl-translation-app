@@ -27,7 +27,7 @@ export default function OutputScreen() {
   const displayMessage = rawMessage?.trim() || DEFAULT_MESSAGE;
   const rawVideoUrl = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
   const rawSequence = Array.isArray(signSequence) ? signSequence[0] : signSequence;
-  const player = useVideoPlayer(rawVideoUrl || null, (videoPlayer) => {
+  const player = useVideoPlayer(rawVideoUrl || '', (videoPlayer) => {
     videoPlayer.loop = false;
   });
   const signWords = displayMessage

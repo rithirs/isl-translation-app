@@ -9,7 +9,7 @@ const apiKey: string = process.env.GEMINI_API_KEY ?? (() => {
 })();
 
 const genAI = new GoogleGenAI({ apiKey });
-const GLOSS_MODEL = 'gemini-2.5-flash';
+const GLOSS_MODEL = 'gemini-3.6-flash';
 const VIDEO_MODEL = 'veo-2.0-generate-001';
 
 export async function extractISLGloss(

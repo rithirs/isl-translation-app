@@ -63,6 +63,18 @@ Clear Expo's cache if the app shows stale files:
 pnpm --filter @workspace/isl-translator exec expo start --clear
 ```
 
+### Expo troubleshooting
+
+On Apple Silicon Macs, run `pnpm install` from the `ISL-Bridge` root so the required `lightningcss-darwin-arm64` package is installed. Do not remove that optional dependency from `pnpm-workspace.yaml`.
+
+If Expo reports `EADDRINUSE` for port `8081`, stop the existing Metro process or start Expo on another port:
+
+```bash
+lsof -nP -iTCP:8081 -sTCP:LISTEN
+kill <process-id>
+pnpm --filter @workspace/isl-translator exec expo start --localhost --port 8082
+```
+
 ## Run the backend API
 
 The backend is an independent pnpm package inside this workspace. From `ISL-Bridge/server`:

@@ -1,11 +1,11 @@
-/** Normalizes English and Tamil text without altering Unicode letters or marks. */
-export function normalizeInput(text: string, _language: 'en' | 'ta'): string {
+/** Normalizes cosmetic variants without changing Tamil or other Unicode letters. */
+export function normalizeInput(text: string): string {
   return text
     .normalize('NFC')
+    .trim()
     .toLocaleLowerCase()
     .replace(/\s+/gu, ' ')
-    .trim()
-    .replace(/^[\p{P}]+|[\p{P}]+$/gu, '')
-    .replace(/\s+[\p{P}]+(?=\s|$)/gu, '')
+    .replace(/[!?"'`]/gu, '')
+    .replace(/\.+$/gu, '')
     .trim();
 }

@@ -1,5 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
-import { buildISLSequencePrompt, buildVeoVideoPrompt, type TranslationLanguage } from '../utils/promptBuilder.js';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { buildISLGlossSystemPrompt, type TranslationLanguage } from '../utils/promptBuilder.js';
 
 const apiKey: string = process.env.GEMINI_API_KEY ?? (() => {
   throw new Error('Missing required environment variable: GEMINI_API_KEY');
@@ -7,51 +10,70 @@ const apiKey: string = process.env.GEMINI_API_KEY ?? (() => {
 
 const genAI = new GoogleGenAI({ apiKey });
 const GLOSS_MODEL = 'gemini-2.5-flash';
-const VIDEO_MODEL = 'veo-3.1-generate-preview';
+const VIDEO_MODEL = 'veo-2.0-generate-001';
 
-export async function generateISLGloss(
+export async function extractISLGloss(
   inputText: string,
-  lang: TranslationLanguage,
+  language: TranslationLanguage,
 ): Promise<string[]> {
   const response = await genAI.models.generateContent({
     model: GLOSS_MODEL,
-    contents: buildISLSequencePrompt(inputText, lang),
+    contents: buildISLGlossSystemPrompt(inputText, language),
     config: { responseMimeType: 'application/json' },
   });
 
   const raw = response.text?.trim();
-  if (!raw) throw new Error('Gemini returned an empty gloss sequence');
+  if (!raw) return inputText.split(/\s+/u).map((word) => word.toUpperCase());
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new Error('Gemini returned invalid gloss JSON');
+    return inputText.split(/\s+/u).map((word) => word.toUpperCase());
   }
-  if (!Array.isArray(parsed) || !parsed.every((token): token is string => typeof token === 'string')) {
-    throw new Error('Gemini gloss response was not a string array');
+  const tokens = parsed && typeof parsed === 'object' && 'glossTokens' in parsed
+    ? (parsed as { glossTokens?: unknown }).glossTokens
+    : undefined;
+  if (Array.isArray(tokens)) {
+    const normalized = tokens.filter((token): token is string => typeof token === 'string')
+      .map((token) => token.trim().toUpperCase()).filter(Boolean);
+    if (normalized.length > 0) return normalized;
   }
-  const tokens = parsed.map((token) => token.trim().toUpperCase()).filter(Boolean);
-  if (tokens.length === 0) throw new Error('Gemini returned no gloss tokens');
-  return tokens;
+  return inputText.split(/\s+/u).map((word) => word.toUpperCase());
 }
 
-export async function generateSigningVideo(glossTokens: string[]): Promise<Buffer> {
+export async function generateSigningVideo(promptText: string): Promise<Buffer> {
   let operation = await genAI.models.generateVideos({
     model: VIDEO_MODEL,
-    prompt: buildVeoVideoPrompt(glossTokens),
-    config: { numberOfVideos: 1, aspectRatio: '9:16' },
+    prompt: promptText,
+    config: {
+      numberOfVideos: 1,
+      aspectRatio: '9:16',
+      durationSeconds: 5,
+      personGeneration: 'allow_adult',
+    },
   });
 
-  while (!operation.done) {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+  for (let attempt = 0; attempt < 18 && !operation.done; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 10_000));
     operation = await genAI.operations.getVideosOperation({ operation });
   }
+  if (!operation.done) throw new Error('Veo video generation timed out after 180 seconds');
+  if (operation.error) throw new Error(`Veo video generation failed: ${JSON.stringify(operation.error)}`);
 
-  const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
-  if (!videoUri) throw new Error('Veo did not return a generated video URI');
+  const video = operation.response?.generatedVideos?.[0]?.video;
+  if (!video) throw new Error('Veo did not return a generated video');
+  if (video.videoBytes) return Buffer.from(video.videoBytes, 'base64');
+  if (!video.uri) throw new Error('Veo did not return a downloadable video URI');
 
-  const videoResponse = await fetch(`${videoUri}&key=${encodeURIComponent(apiKey)}`);
-  if (!videoResponse.ok) throw new Error(`Video download failed with HTTP ${videoResponse.status}`);
-  return Buffer.from(await videoResponse.arrayBuffer());
+  const temporaryDirectory = await mkdtemp(join(tmpdir(), 'isl-video-'));
+  const downloadPath = join(temporaryDirectory, 'generated.mp4');
+  try {
+    await genAI.files.download({ file: video, downloadPath });
+    return await readFile(downloadPath);
+  } finally {
+    await rm(temporaryDirectory, { recursive: true, force: true });
+  }
 }
+
+export const generateISLGloss = extractISLGloss;

@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 export interface TranslationRecord {
   id: string;
   input_text: string;
@@ -8,7 +10,7 @@ export interface TranslationRecord {
   prompt_version: string;
   video_path: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  sign_sequence: unknown[];
+  sign_sequence: Json;
   created_at: string;
 }
 

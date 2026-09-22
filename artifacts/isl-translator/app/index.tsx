@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -30,13 +31,16 @@ export default function HomeScreen() {
   const styles = useMemo(() => createStyles(palette), [palette]);
 
   const handleTranslate = () => {
-    setActiveTab('Translate');
-    Alert.alert('Translate Text', 'Your English or Tamil text is ready for ISL.');
+    router.push('/translate');
   };
 
   const handleTabPress = (tab: Tab) => {
     setActiveTab(tab);
-    if (tab !== 'Home') {
+    if (tab === 'Home') {
+      router.replace('/');
+    } else if (tab === 'Translate') {
+      router.push('/translate');
+    } else {
       Alert.alert(tab, `${tab} is coming next in your ISL journey.`);
     }
   };

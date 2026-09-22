@@ -1,5 +1,9 @@
 import { Router, type Request, type Response } from 'express';
-import { getTranslationHistory, handleTranslation } from '../services/translationService.js';
+import {
+  getOrCreateTranslation,
+  getTranslationHistory,
+} from '../services/translationService.js';
+import { ValidationError } from '../utils/errors.js';
 
 export const translationRouter = Router();
 
@@ -10,14 +14,12 @@ function isLanguage(value: unknown): value is 'en' | 'ta' {
 translationRouter.post('/translate', async (request: Request, response: Response) => {
   const { text, language } = request.body as { text?: unknown; language?: unknown };
   if (typeof text !== 'string' || text.trim().length < 1 || text.trim().length > 500) {
-    response.status(400).json({ error: 'Text must contain between 1 and 500 characters' });
-    return;
+    throw new ValidationError(typeof text === 'string' && text.trim().length === 0 ? 'Please enter text to translate.' : 'Please shorten your message (max 500 characters).');
   }
   if (language !== undefined && !isLanguage(language)) {
-    response.status(400).json({ error: 'Language must be "en" or "ta"' });
-    return;
+    throw new ValidationError('Language must be "en" or "ta".');
   }
-  const result = await handleTranslation(text, language ?? 'en');
+  const result = await getOrCreateTranslation(text, language ?? 'en');
   response.status(200).json(result);
 });
 

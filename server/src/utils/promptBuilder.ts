@@ -1,17 +1,20 @@
 export type TranslationLanguage = 'en' | 'ta';
+import { CURRENT_PROMPT_VERSION } from '../config/constants.js';
 
 export function buildISLGlossSystemPrompt(
   text: string,
   language: TranslationLanguage,
 ): string {
   const languageName = language === 'ta' ? 'Tamil' : 'English';
-  return `Act as a certified Indian Sign Language (ISL) linguist. Translate this ${languageName} phrase into a normalized ISL gloss sequence. Use natural ISL Topic-Comment grammar, omit English or Tamil auxiliary verbs and copulas such as "is" and "are", and prefer concise root vocabulary. Preserve the intended meaning while avoiding invented or decorative signs.
+  return `Prompt version: ${CURRENT_PROMPT_VERSION}
+Act as a certified Indian Sign Language (ISL) linguist. Translate this ${languageName} phrase into a normalized ISL gloss sequence. Use natural ISL Topic-Comment grammar, omit English or Tamil auxiliary verbs and copulas such as "is" and "are", and prefer concise root vocabulary. Preserve the intended meaning while avoiding invented or decorative signs.
 
 Return only valid JSON matching this exact shape: {"glossTokens":["STRING"],"explanation":"STRING"}. glossTokens must be an uppercase string array in signing order. The explanation must be concise and describe the grammar choice. Input phrase: ${JSON.stringify(text)}`;
 }
 
 export function buildVeoVideoPrompt(inputText: string, glossTokens: string[]): string {
-  return `Create a short, high-clarity educational Indian Sign Language (ISL) demonstration video.
+  return `Prompt version: ${CURRENT_PROMPT_VERSION}
+Create a short, high-clarity educational Indian Sign Language (ISL) demonstration video.
 
 Purpose:
 Accessibility and educational sign language demonstration.

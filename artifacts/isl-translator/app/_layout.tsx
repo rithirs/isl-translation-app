@@ -13,6 +13,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { AccessibilityProvider } from '@/context/AccessibilityContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -27,6 +28,7 @@ function RootLayoutNav() {
       <Stack.Screen name="output" options={{ headerShown: false }} />
       <Stack.Screen name="learn" options={{ headerShown: false }} />
       <Stack.Screen name="history" options={{ headerShown: false }} />
+      <Stack.Screen name="saved" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -50,13 +52,15 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView>
-            <KeyboardProvider>
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
+        <AccessibilityProvider>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </AccessibilityProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

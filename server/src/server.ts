@@ -1,7 +1,10 @@
 import 'dotenv/config';
 import cors from 'cors';
-import express, { type ErrorRequestHandler } from 'express';
+import express from 'express';
 import { translationRouter } from './routes/translationRoutes.js';
+import { historyRouter } from './routes/historyRoutes.js';
+import { learnRouter } from './routes/learnRoutes.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 const port = Number.parseInt(process.env.PORT ?? '5000', 10);
@@ -20,12 +23,9 @@ app.get('/health', (_request, response) => {
   response.json({ status: 'ok' });
 });
 app.use('/api', translationRouter);
+app.use('/api', historyRouter);
+app.use('/api', learnRouter);
 
-const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
-  console.error(error);
-  if (response.headersSent) return;
-  response.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
-};
 app.use(errorHandler);
 
 app.listen(port, () => {

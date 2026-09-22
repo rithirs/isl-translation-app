@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test:pipeline": "tsx tests/e2e_pipeline.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.21.0",

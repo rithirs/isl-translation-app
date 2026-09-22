@@ -1,9 +1,9 @@
-/** Normalizes cosmetic variants without changing Tamil or other Unicode letters. */
+/** Normalizes cosmetic variants into the uppercase database key format. */
 export function normalizeInput(text: string): string {
   return text
     .normalize('NFC')
     .trim()
-    .toLocaleLowerCase()
+    .toLocaleUpperCase()
     .replace(/\s+/gu, ' ')
     .replace(/[!?"'`]/gu, '')
     .replace(/\.+$/gu, '')

@@ -5,10 +5,10 @@ import {
   MAX_CONCURRENCY_WAIT_SECONDS,
 } from '../config/constants.js';
 import { extractISLGloss, generateSigningVideo } from './geminiService.js';
-import { getPublicVideoUrl, uploadTranslationVideo } from './storageService.js';
+import { getPublicVideoUrl, uploadTranslationVideo, videoExists } from './storageService.js';
 import { normalizeInput } from '../utils/normalizeText.js';
 import { buildVeoVideoPrompt } from '../utils/promptBuilder.js';
-import { DomainError } from '../utils/errors.js';
+import { AssetNotFoundError, DomainError } from '../utils/errors.js';
 
 export interface TranslationPayload {
   cached: boolean;
@@ -61,7 +61,12 @@ export async function findCachedTranslation(
     .limit(1)
     .maybeSingle();
   if (error) throw new Error(`Translation cache lookup failed: ${error.message}`);
-  return data ? toCompletedPayload(data as unknown as TranslationRecord, true) : null;
+  if (!data) return null;
+  const record = data as unknown as TranslationRecord;
+  if (!(await videoExists(record.video_path))) {
+    throw new AssetNotFoundError(`The translation video for ${record.input_text} is missing from Storage.`);
+  }
+  return toCompletedPayload(record, true);
 }
 
 async function findInFlightTranslation(
@@ -80,6 +85,17 @@ async function findInFlightTranslation(
     .maybeSingle();
   if (error) throw new Error(`In-flight translation lookup failed: ${error.message}`);
   return data as unknown as TranslationRecord | null;
+}
+
+async function findPreSavedSign(normalizedText: string): Promise<{ word: string; video_path: string } | null> {
+  const { data, error } = await supabase
+    .from('signs')
+    .select('word, video_path')
+    .eq('word', normalizedText)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`Pre-saved sign lookup failed: ${error.message}`);
+  return data as unknown as { word: string; video_path: string } | null;
 }
 
 function sleep(milliseconds: number): Promise<void> {
@@ -125,6 +141,35 @@ export async function getOrCreateTranslation(
 
   const cached = await findCachedTranslation(normalized, language);
   if (cached) return cached;
+
+  // Use an uploaded, verified catalog video before spending a Gemini/Veo call.
+  const preSavedSign = await findPreSavedSign(normalized);
+  if (preSavedSign) {
+    if (!(await videoExists(preSavedSign.video_path))) {
+      throw new AssetNotFoundError(`The pre-saved video for ${preSavedSign.word} is missing from Storage.`);
+    }
+    const { data: savedData, error: savedError } = await supabase
+      .from('translations')
+      .insert({
+        input_text: inputText,
+        normalized_text: normalized,
+        language,
+        prompt_version: CURRENT_PROMPT_VERSION,
+        video_path: preSavedSign.video_path,
+        status: 'completed',
+        sign_sequence: preSavedSign.word.split(/\s+/u),
+        error_message: null,
+      } as never)
+      .select('*')
+      .single();
+    const savedRecord = savedData as unknown as TranslationRecord | null;
+    if (!savedError && savedRecord) return toCompletedPayload(savedRecord, false);
+    if (savedError?.code !== '23505') {
+      throw new Error(`Could not cache pre-saved translation: ${savedError?.message ?? 'no record returned'}`);
+    }
+    const existingSaved = await findCachedTranslation(normalized, language);
+    if (existingSaved) return existingSaved;
+  }
 
   const existing = await findInFlightTranslation(normalized, language);
   if (existing) return waitForCompletion(existing.id);

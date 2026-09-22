@@ -41,7 +41,7 @@ export default function HomeScreen() {
     } else if (tab === 'Translate') {
       router.push('/translate');
     } else {
-      Alert.alert(tab, `${tab} is coming next in your ISL journey.`);
+      router.push('/learn');
     }
   };
 

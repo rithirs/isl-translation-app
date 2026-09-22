@@ -25,6 +25,7 @@ function RootLayoutNav() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="translate" options={{ headerShown: false }} />
       <Stack.Screen name="output" options={{ headerShown: false }} />
+      <Stack.Screen name="learn" options={{ headerShown: false }} />
     </Stack>
   );
 }

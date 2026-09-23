@@ -42,6 +42,12 @@ export interface SignRecord {
   created_at: string;
 }
 
+export interface SignAliasRecord {
+  id: string;
+  sign_id: string;
+  alias: string;
+}
+
 interface Database {
   public: {
     Tables: {
@@ -69,6 +75,12 @@ interface Database {
         Row: SignRecord;
         Insert: Omit<SignRecord, 'id' | 'created_at'>;
         Update: Partial<SignRecord>;
+        Relationships: [];
+      };
+      sign_aliases: {
+        Row: SignAliasRecord;
+        Insert: Omit<SignAliasRecord, 'id'>;
+        Update: Partial<SignAliasRecord>;
         Relationships: [];
       };
     };

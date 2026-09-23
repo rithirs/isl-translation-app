@@ -32,6 +32,16 @@ create table if not exists public.signs (
 
 create index if not exists signs_category_idx on public.signs (category);
 
+create table if not exists public.sign_aliases (
+  id uuid primary key default gen_random_uuid(),
+  sign_id uuid not null references public.signs(id) on delete cascade,
+  alias text not null,
+  unique (sign_id, alias),
+  unique (alias)
+);
+
+create index if not exists sign_aliases_alias_idx on public.sign_aliases (alias);
+
 insert into public.signs (word, category, description, video_path)
 values
   ('HELLO', 'Greetings', 'A friendly greeting.', 'hello.mp4'),

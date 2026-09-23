@@ -88,14 +88,31 @@ async function findInFlightTranslation(
 }
 
 async function findPreSavedSign(normalizedText: string): Promise<{ word: string; video_path: string } | null> {
-  const { data, error } = await supabase
+  const exact = await supabase
     .from('signs')
     .select('word, video_path')
     .eq('word', normalizedText)
     .limit(1)
     .maybeSingle();
-  if (error) throw new Error(`Pre-saved sign lookup failed: ${error.message}`);
-  return data as unknown as { word: string; video_path: string } | null;
+  if (exact.error) throw new Error(`Pre-saved sign lookup failed: ${exact.error.message}`);
+  if (exact.data) return exact.data as unknown as { word: string; video_path: string };
+
+  const alias = await supabase
+    .from('sign_aliases')
+    .select('sign_id')
+    .eq('alias', normalizedText)
+    .limit(1)
+    .maybeSingle();
+  if (alias.error) throw new Error(`Pre-saved alias lookup failed: ${alias.error.message}`);
+  if (!alias.data) return null;
+
+  const sign = await supabase
+    .from('signs')
+    .select('word, video_path')
+    .eq('id', (alias.data as unknown as { sign_id: string }).sign_id)
+    .maybeSingle();
+  if (sign.error) throw new Error(`Aliased sign lookup failed: ${sign.error.message}`);
+  return sign.data as unknown as { word: string; video_path: string } | null;
 }
 
 function sleep(milliseconds: number): Promise<void> {

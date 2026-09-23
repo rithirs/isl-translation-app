@@ -34,7 +34,8 @@ create index if not exists signs_category_idx on public.signs (category);
 
 insert into public.signs (word, category, description, video_path)
 values
-  ('HELLO', 'Greetings', 'A friendly greeting.', 'signs/hello.mp4'),
-  ('GOOD MORNING', 'Greetings', 'A morning greeting.', 'signs/good-morning.mp4'),
-  ('THANK YOU', 'Greetings', 'Express gratitude.', 'signs/thank-you.mp4')
+  ('HELLO', 'Greetings', 'A friendly greeting.', 'hello.mp4'),
+  ('GOOD MORNING', 'Greetings', 'A morning greeting.', 'good_morning.mp4'),
+  ('THANK YOU', 'Greetings', 'Express gratitude.', 'thank-you.mp4'),
+  ('GOOD NIGHT', 'Greetings', 'An evening greeting.', 'good_night.mp4')
 on conflict do nothing;

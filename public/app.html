@@ -2340,9 +2340,7 @@
     function populateSignLangOptions() {
       const sel = document.getElementById('signLangSelect');
       if (!sel) return;
-      // Order: largest corpora first, empty-corpora last (but kept visible so
-      // authors can still pick LSE/RSL/FSL and see the "no signs yet" note).
-      const order = ['bsl','asl','dgs','lsf','pjm','gsl','isl','vsl','ngt','kurdish','algerian','bangla','lse','rsl','fsl'];
+      const order = ['isl'];
       sel.innerHTML = '';
       for (const code of order) {
         const display = SIGN_LANG_DISPLAY[code] || code.toUpperCase();
@@ -2371,11 +2369,8 @@
     function detectRegionalTarget() {
       const raw = (navigator.language || 'en').toLowerCase();
       const two = raw.split('-')[0];
-      // Best-available match by browser language when we have no localStorage.
-      // No Libras corpus yet; Brazilian browsers fall through to BSL as the
-      // global default, per prompt 4 deployment safety (preserve English→BSL).
-      const map = { de: 'dgs', fr: 'lsf', pl: 'pjm', nl: 'ngt', el: 'gsl' };
-      return map[two] || 'bsl';
+      const map = { de: 'isl', fr: 'isl', pl: 'isl', nl: 'isl', el: 'isl' };
+      return map[two] || 'isl';
     }
 
     function restoreLangChoices() {
@@ -2478,8 +2473,8 @@
 
     // Initialize the three-slot strip — options, defaults, listeners. Must
     // run before the initial switchSignLanguage() call below so the restored
-    // target language (not hardcoded 'bsl') is what gets loaded on first
-    // paint. English→BSL remains the universal fallback if navigator and
+    // target language (not hardcoded 'isl') is what gets loaded on first
+    // paint. English→ISL is the default fallback if navigator and
     // localStorage give us nothing.
     populateSignLangOptions();
     restoreLangChoices();
@@ -2489,7 +2484,7 @@
     document.getElementById('signLangSelect').addEventListener('change', onTargetLangChanged);
 
     window.addEventListener('load', async () => {
-      const initialTgt = document.getElementById('signLangSelect').value || 'bsl';
+      const initialTgt = document.getElementById('signLangSelect').value || 'isl';
       await switchSignLanguage(initialTgt);
       checkAllReady();
     });

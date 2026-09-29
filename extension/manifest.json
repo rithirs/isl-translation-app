@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Kozha — Sign Language Translator",
+  "name": "ISL-Translator",
   "version": "2.0.0",
-  "description": "Translate any text into sign language. Works on any webpage, YouTube videos, or standalone.",
+  "description": "Translate text into Indian Sign Language with the ISL-Translator browser extension.",
   "permissions": ["activeTab", "storage", "contextMenus", "scripting"],
   "host_permissions": [
     "https://kozha-translate.com/*"
@@ -35,7 +35,7 @@
   "commands": {
     "_execute_action": {
       "suggested_key": { "default": "Ctrl+Shift+K", "mac": "Command+Shift+K" },
-      "description": "Open Kozha translator"
+      "description": "Open ISL-Translator"
     }
   },
   "icons": {

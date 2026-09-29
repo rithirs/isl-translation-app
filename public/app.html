@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kozha — Translator</title>
-  <meta name="description" content="Translate text or speech into sign language animations with Kozha. Supports German, Polish, and British sign languages.">
-  <meta property="og:title" content="Kozha — Sign Language Translator">
-  <meta property="og:description" content="Type or speak to see sign language animations in real time. Free and open-source.">
+  <title>ISL Translator — Text and Speech to Indian Sign Language</title>
+  <meta name="description" content="Translate text or speech into Indian Sign Language (ISL) animations. Free and open-source.">
+  <meta property="og:title" content="ISL Translator — Text and Speech to Indian Sign Language">
+  <meta property="og:description" content="Type or speak to see Indian Sign Language (ISL) animations in real time. Free and open-source.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://kozha-translate.com/app.html">
   <meta name="twitter:card" content="summary">
@@ -1431,11 +1431,9 @@
   <a href="#main-content" class="skip-link kz-skip-link">Skip to main content</a>
 
   <header class="kz-header" aria-label="Main navigation">
-    <a href="/" class="kz-header__logo">Koz<span>ha</span></a>
+  <a href="/" class="kz-header__logo">ISL<span>Translator</span></a>
     <ul class="kz-header__nav">
       <li><a href="/app.html" class="kz-header__link is-active" aria-current="page">Translate</a></li>
-      <li><a href="/contribute.html" class="kz-header__link">Contribute</a></li>
-      <li><a href="/progress" class="kz-header__link">Progress</a></li>
       <li><a href="/credits" class="kz-header__link">About</a></li>
     </ul>
     <button class="kz-header__hamburger" type="button" aria-label="Menu" aria-expanded="false">
@@ -1853,37 +1851,26 @@
   <footer class="kz-footer" role="contentinfo">
     <div class="kz-footer__inner">
       <div class="kz-footer__brand">
-        <a href="/" class="kz-footer__logo">Koz<span>ha</span></a>
+        <a href="/" class="kz-footer__logo">ISL<span>Translator</span></a>
         <p class="kz-footer__mission">Open-source translator from text and speech into sign language. Built with the Deaf community.</p>
       </div>
       <nav class="kz-footer__cols" aria-label="Footer">
         <div class="kz-footer__col">
-          <h2  class="kz-footer__col-title">Use</h2>
+          <h2 class="kz-footer__col-title">Use</h2>
           <ul>
             <li><a href="/app.html">Translate</a></li>
-            <li><a href="/contribute.html">Contribute</a></li>
           </ul>
         </div>
         <div class="kz-footer__col">
-          <h2  class="kz-footer__col-title">Project</h2>
+          <h2 class="kz-footer__col-title">Project</h2>
           <ul>
-            <li><a href="/progress">Progress</a></li>
-            <li><a href="/credits">Credits</a></li>
-            <li><a href="/governance.html">Governance</a></li>
-            <li><a href="/whats-new.html">What&rsquo;s new</a></li>
-          </ul>
-        </div>
-        <div class="kz-footer__col">
-          <h2  class="kz-footer__col-title">Community</h2>
-          <ul>
-            <li><a href="https://github.com/zhan-a/Kozha" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-            <li><a href="mailto:deaf-feedback@kozha.dev">deaf-feedback@kozha.dev</a></li>
+            <li><a href="/credits">About</a></li>
           </ul>
         </div>
       </nav>
       <div class="kz-footer__meta">
-        <p class="kz-footer__copy">© 2025–2026 Kozha. Open-source research project.</p>
-        <p class="kz-footer__os">Open source on <a href="https://github.com/zhan-a/Kozha" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+        <p class="kz-footer__copy">© 2025–2026 ISL Translator. Open-source research project.</p>
+        <p class="kz-footer__os">Open source on <a href="https://github.com/rithirs/isl-translation-app" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
       </div>
     </div>
   </footer>
@@ -2340,20 +2327,8 @@
     function populateSignLangOptions() {
       const sel = document.getElementById('signLangSelect');
       if (!sel) return;
-      const order = ['isl'];
-      sel.innerHTML = '';
-      for (const code of order) {
-        const display = SIGN_LANG_DISPLAY[code] || code.toUpperCase();
-        const n = SIGN_LANG_COVERAGE[code] ?? 0;
-        let suffix;
-        if (n === 0) suffix = ' (no signs yet)';
-        else if (n < 200) suffix = ' (' + n + ' signs — limited)';
-        else suffix = ' (' + n + ' signs)';
-        const opt = document.createElement('option');
-        opt.value = code;
-        opt.textContent = display + suffix;
-        sel.appendChild(opt);
-      }
+      sel.innerHTML = '<option value="isl" selected>Indian Sign Language (ISL)</option>';
+      sel.disabled = true; // Lock dropdown so users cannot change it
     }
 
     function detectBrowserLang() {
@@ -2367,22 +2342,14 @@
     }
 
     function detectRegionalTarget() {
-      const raw = (navigator.language || 'en').toLowerCase();
-      const two = raw.split('-')[0];
-      const map = { de: 'isl', fr: 'isl', pl: 'isl', nl: 'isl', el: 'isl' };
-      return map[two] || 'isl';
+      return 'isl';
     }
 
     function restoreLangChoices() {
-      let src = null, tgt = null;
-      try { src = localStorage.getItem(LS_SOURCE); tgt = localStorage.getItem(LS_TARGET); } catch (_) {}
       const srcSel = document.getElementById('langHint');
       const tgtSel = document.getElementById('signLangSelect');
-      if (!srcSel || !tgtSel) return;
-      const srcOptions = Array.from(srcSel.options).map(o => o.value);
-      const tgtOptions = Array.from(tgtSel.options).map(o => o.value);
-      srcSel.value = (src && srcOptions.includes(src)) ? src : detectBrowserLang();
-      tgtSel.value = (tgt && tgtOptions.includes(tgt)) ? tgt : detectRegionalTarget();
+      if (srcSel) srcSel.value = 'en';
+      if (tgtSel) tgtSel.value = 'isl';
     }
 
     function saveLangChoices() {
@@ -2484,8 +2451,7 @@
     document.getElementById('signLangSelect').addEventListener('change', onTargetLangChanged);
 
     window.addEventListener('load', async () => {
-      const initialTgt = document.getElementById('signLangSelect').value || 'isl';
-      await switchSignLanguage(initialTgt);
+      await switchSignLanguage('isl');
       checkAllReady();
     });
   </script>

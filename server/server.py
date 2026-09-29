@@ -73,7 +73,7 @@ def _ensure_argos():
 class TextRequest(BaseModel):
     text: str
     language: str = "en"
-    sign_language: str = "bsl"
+    sign_language: str = "isl"
     # Prompt 6: optional "strict" mode. When true, the backend annotates each
     # token with whether the target sign_language has a Deaf-native-reviewed
     # record for it; unreviewed tokens get force_fingerspell=true so the
@@ -665,7 +665,7 @@ def process_sentence(doc_or_span, stopwords: set, time_words: set, pronouns: dic
 
 MAX_INPUT_LENGTH = 10000
 
-def process_text(text: str, language: str = "en", sign_language: str = "bsl") -> str:
+def process_text(text: str, language: str = "en", sign_language: str = "isl") -> str:
     text = (text or "").strip()
     if not text:
         return ""
@@ -707,7 +707,7 @@ def process_text(text: str, language: str = "en", sign_language: str = "bsl") ->
 def plan_from_text(
     text: str,
     language: str = "en",
-    sign_language: str = "bsl",
+    sign_language: str = "isl",
     reviewed_only: bool = False,
 ) -> Dict[str, object]:
     text = (text or "").strip()

@@ -1,8 +1,10 @@
-# Kozha — Speech-to-Sign Language Translation
+# ISL-Translator — Indian Sign Language Translation
 
-**Kozha** is an open-source pipeline that translates spoken language into 3D sign language animations. It bridges the communication gap between hearing and deaf communities by converting speech input into animated sign language output via a linguistically grounded intermediate representation.
+**ISL-Translator** is an open-source application that translates text, speech, and audio/video input into Indian Sign Language (ISL) animations. English is the default source language, with additional text input languages available where translation routes are supported. ISL is the app's only selectable sign-language output.
 
-🌐 **Live Demo:** [kozha-translate.com](https://kozha-translate.com)
+🌐 **Live Demo:** [ISL-Translator](https://kozha-translate.com)
+
+The repository retains other sign-language corpora and alphabet/fingerspelling resources for fallback, research, and data maintenance. Keeping those files does not make those languages selectable in the current product. No corpus or fallback database needs to be deleted to keep the user-facing experience ISL-only.
 
 ---
 
@@ -12,7 +14,7 @@ Over 70 million people worldwide use sign language as their primary language, ye
 
 ## How It Works
 
-Kozha uses a multi-stage pipeline:
+The application uses a multi-stage pipeline:
 
 ```
 Speech → Text → NLP Processing → HamNoSys → SiGML → 3D Animation
@@ -24,9 +26,9 @@ Speech → Text → NLP Processing → HamNoSys → SiGML → 3D Animation
 4. **SiGML Generation** — HamNoSys representations are serialized into [Signing Gesture Markup Language (SiGML)](http://vh.cmp.uea.ac.uk/index.php/SiGML), an XML-based format.
 5. **3D Avatar Rendering (CWASA)** — SiGML is rendered as 3D sign language animation using the [CWASA](http://vh.cmp.uea.ac.uk/index.php/CWA) avatar system.
 
-## Multilingual NLP
+## Input Language Processing
 
-The backend supports native NLP processing in 7 languages via dedicated spaCy models:
+The backend supports native NLP processing in 7 languages via dedicated spaCy models. These are input-processing languages; the sign-language output remains ISL.
 
 | Language | spaCy Model |
 |---|---|
@@ -38,7 +40,7 @@ The backend supports native NLP processing in 7 languages via dedicated spaCy mo
 | Dutch | `nl_core_news_sm` |
 | Greek | `el_core_news_sm` |
 
-Languages without a dedicated spaCy model are handled via server-side translation (Argos Translate) to the sign language's base language before NLP processing. Models are loaded on demand with an LRU cache (max 4 concurrent).
+Languages without a dedicated spaCy model may be handled via server-side translation (Argos Translate) to English before NLP processing. Models are loaded on demand with an LRU cache (max 4 concurrent).
 
 ## Tech Stack
 
@@ -49,6 +51,7 @@ Languages without a dedicated spaCy model are handled via server-side translatio
 | Sign notation | HamNoSys |
 | Markup | SiGML (XML) |
 | 3D rendering | CWASA avatar |
+| Sign-language output | Indian Sign Language (ISL) |
 
 ## Getting Started
 
@@ -56,8 +59,8 @@ Languages without a dedicated spaCy model are handled via server-side translatio
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/kozha.git
-cd kozha
+git clone https://github.com/rithirs/isl-translation-app.git
+cd isl-translation-app
 
 # Create a virtual environment
 python -m venv venv
@@ -78,11 +81,11 @@ uvicorn server.server:app --reload
 
 ## Chrome Extension
 
-The `extension/` directory contains a Chrome extension that translates text into sign language on any webpage.
+The `extension/` directory contains a Chrome extension that translates text into ISL on any webpage.
 
 **Three modes:**
 
-1. **Popup** — Click the extension icon (or `Ctrl+Shift+K` / `Cmd+Shift+K`) to open a standalone translator. Type text, pick input and sign languages, and click Sign.
+1. **Popup** — Click the extension icon (or `Ctrl+Shift+K` / `Cmd+Shift+K`) to open a standalone translator. Type text, choose an input language, and click Sign. ISL is the fixed sign-language output.
 2. **Context menu** — Select text on any webpage, right-click, and choose "Sign this text". A floating panel appears with the 3D avatar signing the selection.
 3. **YouTube** — Automatically injects on YouTube watch pages. Extracts captions, translates them, and syncs sign playback with the video timeline. Supports windowed translation for long videos (>200 segments).
 
@@ -91,7 +94,7 @@ The `extension/` directory contains a Chrome extension that translates text into
 **Keyboard shortcut:** `Ctrl+Shift+K` (Mac: `Cmd+Shift+K`) opens the popup.
 
 **Limitations:**
-- BSL has the most complete sign database; other sign languages have varying coverage
+- ISL vocabulary coverage is still expanding; unknown words may be fingerspelled when alphabet data is available.
 - Requires the kozha-translate.com backend to be running
 - YouTube mode requires captions (auto-generated or manual)
 - CWASA avatar requires WebGL (falls back to text-only gloss display)
@@ -99,7 +102,7 @@ The `extension/` directory contains a Chrome extension that translates text into
 ## Project Structure
 
 ```
-kozha/
+isl-translation-app/
 ├── .github/workflows/deploy.yml
 ├── extension/
 │   ├── manifest.json
@@ -121,22 +124,17 @@ kozha/
 │   ├── contribute.html
 │   └── LICENSE
 ├── data/
-│   ├── hamnosys_bsl_version1.sigml
-│   ├── hamnosys_bsl.csv
-│   ├── bsl_alphabet_sigml.sigml
+│   ├── Indian_SL.sigml
 │   ├── asl_alphabet_sigml.sigml
-│   ├── dgs_alphabet_sigml.sigml
-│   ├── lsf_alphabet_sigml.sigml
-│   ├── pjm_alphabet_sigml.sigml
-│   ├── ngt_alphabet_sigml.sigml
-│   └── ... (15 sign language databases)
+│   ├── bsl_alphabet_sigml.sigml
+│   └── ... (ISL corpus, other corpora, and fallback alphabet resources)
 └── README.md
 ```
 
 **Known limitations:**
-- Vocabulary coverage is still expanding.
-- BSL has the most complete sign database; other sign languages have varying coverage.
-- Languages without a dedicated spaCy model rely on client-side translation before NLP processing.
+- ISL vocabulary coverage is still expanding; some input words may be omitted or fingerspelled depending on available alphabet data.
+- Other sign-language corpora remain in `data/`, but the active web app and extension expose ISL as the only sign-language target.
+- Input languages without a dedicated spaCy model may rely on server-side translation before NLP processing.
 
 ## Pre-launch setup (chat2hamnosys)
 

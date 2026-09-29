@@ -836,7 +836,7 @@
             <span class="cr-license cr-license--open" title="Creative Commons Attribution 4.0">CC BY 4.0</span>
           </div>
           <p class="cr-card__body">
-            HamNoSys is a phonetic transcription system for sign languages, covering handshape, orientation, location, movement, and non-manual features. The current reference is HamNoSys 4.0 (Hanke et al., 2018). Kozha uses HamNoSys as the canonical internal representation for every sign regardless of language.
+            HamNoSys is a phonetic transcription system for sign languages, covering handshape, orientation, location, movement, and non-manual features. The current reference is HamNoSys 4.0 (Hanke et al., 2018). ISL Translator uses HamNoSys as the canonical internal representation for every sign regardless of language.
           </p>
           <dl class="cr-meta">
             <div class="cr-meta__row">
@@ -867,7 +867,7 @@
             <span class="cr-license cr-license--academic" title="IDGS distribution terms">Academic</span>
           </div>
           <p class="cr-card__body">
-            The bgHamNoSysUnicode TrueType font ships the HamNoSys 4.0 glyph set at intended visual fidelity. Kozha self-hosts the font (no CDN) on the contribute page so HamNoSys codepoints render correctly in the notation editor.
+            The bgHamNoSysUnicode TrueType font ships the HamNoSys 4.0 glyph set at intended visual fidelity. ISL Translator self-hosts the font (no CDN) on the contribute page so HamNoSys codepoints render correctly in the notation editor.
           </p>
           <dl class="cr-meta">
             <div class="cr-meta__row">
@@ -898,7 +898,7 @@
         <span class="cr-section__num">Section 03</span>
         <h2 id="corpora-heading" class="cr-section__title">Sign-language <em>corpora.</em></h2>
         <p class="cr-section__note">
-          The signs Kozha can render come from thirteen sources across twelve sign languages. Where the upstream repository does not declare a license, we say so plainly and mark the source until the author confirms permissions.
+          The signs ISL Translator can render come from thirteen sources across twelve sign languages. Where the upstream repository does not declare a license, we say so plainly and mark the source until the author confirms permissions.
         </p>
       </header>
 
@@ -1008,7 +1008,7 @@
             </div>
           </div>
           <p class="cr-card__body">
-            The European DictaSign project produced a comparable parallel corpus across four sign languages (BSL, DGS, GSL, LSF). Kozha's British Sign Language data is drawn directly from the DictaSign BSL portion. (ASL previously fell back to this BSL set; it now loads its own ASL-LEX-derived lexical corpus — see the ASL-LEX card below.)
+            The European DictaSign project produced a comparable parallel corpus across four sign languages (BSL, DGS, GSL, LSF). ISL Translator's British Sign Language data is drawn directly from the DictaSign BSL portion. (ASL previously fell back to this BSL set; it now loads its own ASL-LEX-derived lexical corpus — see the ASL-LEX card below.)
           </p>
           <dl class="cr-meta">
             <div class="cr-meta__row">
@@ -1088,7 +1088,7 @@
             </div>
           </div>
           <p class="cr-card__body">
-            German Sign Language data is drawn from the DGS Lexicon, curated by IDGS as part of the DGS-Korpus project, and re-packaged for avatar rendering by the SignAvatars aggregation. Kozha ingests the SignAvatars SiGML export; the upstream linguistic record is the DGS-Korpus.
+            German Sign Language data is drawn from the DGS Lexicon, curated by IDGS as part of the DGS-Korpus project, and re-packaged for avatar rendering by the SignAvatars aggregation. ISL Translator ingests the SignAvatars SiGML export; the upstream linguistic record is the DGS-Korpus.
           </p>
           <dl class="cr-meta">
             <div class="cr-meta__row">
@@ -1438,7 +1438,7 @@
             </div>
           </div>
           <p class="cr-card__body">
-            Vietnamese Sign Language data is drawn from Raian Rido's VSL GitHub repository — the largest community-contributed SiGML dataset in Kozha, contributing over three thousand entries.
+            Vietnamese Sign Language data is drawn from Raian Rido's VSL GitHub repository — the largest community-contributed SiGML dataset in ISL Translator, contributing over three thousand entries.
           </p>
           <dl class="cr-meta">
             <div class="cr-meta__row">
@@ -1515,7 +1515,7 @@
         <span class="cr-section__num">Section 04</span>
         <h2 id="translation-heading" class="cr-section__title">Translation <em>layer.</em></h2>
         <p class="cr-section__note">
-          Input text arrives in one of many source languages; Kozha routes it through translation and NLP before it ever touches a sign database. Two libraries do almost all of this work.
+          Input text arrives in one of many source languages; ISL Translator routes it through translation and NLP before it ever touches a sign database. Two libraries do almost all of this work.
         </p>
       </header>
 
@@ -1529,7 +1529,7 @@
             <span class="cr-license cr-license--open">MIT</span>
           </div>
           <p class="cr-card__body">
-            argostranslate is the text-translation layer between Kozha's supported input languages and the sign language's base language. It runs server-side with no network calls and packages per-pair translation models downloaded at install time. Supported pairs today: English, French, German, Spanish, Polish, Dutch, Greek, Russian, Arabic.
+            argostranslate is the text-translation layer between ISL Translator's supported input languages and the sign language's base language. It runs server-side with no network calls and packages per-pair translation models downloaded at install time. Supported pairs today: English, French, German, Spanish, Polish, Dutch, Greek, Russian, Arabic.
           </p>
           <dl class="cr-meta">
             <div class="cr-meta__row">
@@ -1559,7 +1559,7 @@
             <span class="cr-license cr-license--open">MIT</span>
           </div>
           <p class="cr-card__body">
-            spaCy is the parser, tokenizer, lemmatizer, and POS tagger that turns input text into a sequence of linguistic tokens before the sign database is consulted. Kozha loads dedicated spaCy models for seven languages (English, German, French, Spanish, Polish, Dutch, Greek) and caches up to four concurrent models in an LRU.
+            spaCy is the parser, tokenizer, lemmatizer, and POS tagger that turns input text into a sequence of linguistic tokens before the sign database is consulted. ISL Translator loads dedicated spaCy models for seven languages (English, German, French, Spanish, Polish, Dutch, Greek) and caches up to four concurrent models in an LRU.
           </p>
           <dl class="cr-meta">
             <div class="cr-meta__row">
@@ -1572,7 +1572,7 @@
             </div>
           </dl>
           <p class="cr-license-detail">
-            <strong>MIT License (library).</strong> The small-news and core-web models Kozha uses are MIT-licensed as of spaCy 3.8.
+            <strong>MIT License (library).</strong> The small-news and core-web models ISL Translator uses are MIT-licensed as of spaCy 3.8.
           </p>
           <div class="cr-links">
             <a href="https://spacy.io/" rel="noopener">spaCy home</a>
@@ -1591,7 +1591,7 @@
         <span class="cr-section__num">Section 05</span>
         <h2 id="contributors-heading" class="cr-section__title">Contributors.</h2>
         <p class="cr-section__note">
-          The people who built Kozha, and the people who reviewed signs into it. Anonymous contribution is respected — contributors who have asked not to be named are counted in the aggregate line below rather than listed individually.
+          The people who built ISL Translator, and the people who reviewed signs into it. Anonymous contribution is respected — contributors who have asked not to be named are counted in the aggregate line below rather than listed individually.
         </p>
       </header>
 
@@ -1655,7 +1655,7 @@
         <div class="cr-prose__row">
           <span class="cr-prose__label">Status</span>
           <div class="cr-prose__body">
-            <p><strong>No external funding to date.</strong> Kozha's infrastructure costs (hosting, domain, translation-model storage) are covered by the core team out of pocket. If and when external funding arrives, it will be listed here with the funder, amount bracket, and any conditions attached.</p>
+            <p><strong>No external funding to date.</strong> ISL Translator's infrastructure costs (hosting, domain, translation-model storage) are covered by the core team out of pocket. If and when external funding arrives, it will be listed here with the funder, amount bracket, and any conditions attached.</p>
           </div>
         </div>
       </div>

@@ -21,8 +21,9 @@ mimetypes.add_type("font/otf", ".otf")
 # chat2hamnosys uses flat imports (``from session import ...``); make its
 # package directory importable before anything inside it is referenced.
 _CHAT2HAMNOSYS_ROOT = Path(__file__).resolve().parent.parent / "backend" / "chat2hamnosys"
-if str(_CHAT2HAMNOSYS_ROOT) not in sys.path:
-    sys.path.insert(0, str(_CHAT2HAMNOSYS_ROOT))
+SERVER_DIR = Path(__file__).resolve().parent
+if str(SERVER_DIR) not in sys.path:
+    sys.path.insert(0, str(SERVER_DIR))
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware

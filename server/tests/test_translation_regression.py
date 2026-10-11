@@ -44,15 +44,15 @@ client = TestClient(app)
 KNOWN_TAGS = extract_known_tags()
 
 
-def test_tamil_translation_is_limited_to_english() -> None:
-    """Tamil is an input language for the ISL English gloss pipeline only."""
-    assert server_module._translation_route_supported("ta", "en")
-    assert not server_module._translation_route_supported("ta", "fr")
-    assert not server_module._translation_route_supported("en", "ta")
+def test_hindi_translation_is_limited_to_english() -> None:
+    """Hindi is an input language for the ISL English gloss pipeline only."""
+    assert server_module._translation_route_supported("hi", "en")
+    assert not server_module._translation_route_supported("hi", "fr")
+    assert not server_module._translation_route_supported("en", "hi")
 
 
-def test_tamil_translate_text_returns_english(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Tamil requests use the configured translator and return its English text."""
+def test_hindi_translate_text_returns_english(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hindi requests use the configured translator and return its English text."""
     from argostranslate import translate
 
     monkeypatch.setattr(server_module, "_ensure_argos", lambda: None)
@@ -61,7 +61,7 @@ def test_tamil_translate_text_returns_english(monkeypatch: pytest.MonkeyPatch) -
         "get_installed_languages",
         lambda: [
             SimpleNamespace(
-                code="ta",
+                code="hi",
                 get_translation=lambda target: object() if target.code == "en" else None,
             ),
             SimpleNamespace(code="en", get_translation=lambda target: None),
@@ -71,8 +71,8 @@ def test_tamil_translate_text_returns_english(monkeypatch: pytest.MonkeyPatch) -
     resp = client.post(
         "/api/translate-text",
         json={
-            "text": "வணக்கம்",
-            "source_lang": "ta",
+            "text": "नमस्ते",
+            "source_lang": "hi",
             "target_lang": "en",
             "target_sign_lang": "isl",
         },
@@ -81,7 +81,7 @@ def test_tamil_translate_text_returns_english(monkeypatch: pytest.MonkeyPatch) -
     assert resp.json()["translated"] == "hello"
 
 
-def test_tamil_translate_text_reports_missing_model(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_hindi_translate_text_reports_missing_model(monkeypatch: pytest.MonkeyPatch) -> None:
     """A supported pair without an installed route returns an actionable error."""
     from argostranslate import translate
 
@@ -94,22 +94,22 @@ def test_tamil_translate_text_reports_missing_model(monkeypatch: pytest.MonkeyPa
     resp = client.post(
         "/api/translate-text",
         json={
-            "text": "வணக்கம்",
-            "source_lang": "ta",
+            "text": "नमस्ते",
+            "source_lang": "hi",
             "target_lang": "en",
             "target_sign_lang": "isl",
         },
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["translated"] == "வணக்கம்"
-    assert data["error"] == "No installed translation model is available from ta to en."
+    assert data["translated"] == "नमस्ते"
+    assert data["error"] == "No installed translation model is available from hi to en."
 
 
-def test_tamil_translate_text_reports_missing_translation_pair(
+def test_hindi_translate_text_reports_missing_translation_pair(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Installed language codes without a ta→en model are reported cleanly."""
+    """Installed language codes without a hi→en model are reported cleanly."""
     from argostranslate import translate
 
     monkeypatch.setattr(server_module, "_ensure_argos", lambda: None)
@@ -117,41 +117,41 @@ def test_tamil_translate_text_reports_missing_translation_pair(
         translate,
         "get_installed_languages",
         lambda: [
-            SimpleNamespace(code="ta", get_translation=lambda target: None),
+            SimpleNamespace(code="hi", get_translation=lambda target: None),
             SimpleNamespace(code="en", get_translation=lambda target: None),
         ],
     )
     resp = client.post(
         "/api/translate-text",
         json={
-            "text": "வணக்கம்",
-            "source_lang": "ta",
+            "text": "नमस्ते",
+            "source_lang": "hi",
             "target_lang": "en",
             "target_sign_lang": "isl",
         },
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["translated"] == "வணக்கம்"
-    assert data["error"] == "No installed translation model is available from ta to en."
+    assert data["translated"] == "नमस्ते"
+    assert data["error"] == "No installed translation model is available from hi to en."
 
 
-def test_tamil_translation_with_installed_argos_model() -> None:
-    """Exercise the real Tamil→English Argos model when it is installed."""
+def test_hindi_translation_with_installed_argos_model() -> None:
+    """Exercise the real Hindi→English Argos model when it is installed."""
     from argostranslate import package
 
     installed_codes = {
         (model.from_code, model.to_code)
         for model in package.get_installed_packages()
     }
-    if ("ta", "en") not in installed_codes:
-        pytest.skip("Tamil→English Argos model is not installed")
+    if ("hi", "en") not in installed_codes:
+        pytest.skip("Hindi→English Argos model is not installed")
 
     resp = client.post(
         "/api/translate-text",
         json={
-            "text": "வணக்கம்",
-            "source_lang": "ta",
+            "text": "नमस्ते",
+            "source_lang": "hi",
             "target_lang": "en",
             "target_sign_lang": "isl",
         },
@@ -161,7 +161,7 @@ def test_tamil_translation_with_installed_argos_model() -> None:
     assert "error" not in data, data.get("error")
     translated = data["translated"].strip().lower()
     assert translated
-    assert translated != "வணக்கம்"
+    assert translated != "नमस्ते"
     assert re.search(r"[a-z]", translated), f"translation is not English: {translated!r}"
 
 

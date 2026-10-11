@@ -28,7 +28,7 @@ Speech → Text → NLP Processing → HamNoSys → SiGML → 3D Animation
 
 ## Input Language Processing
 
-The backend supports native NLP processing in 7 languages via dedicated spaCy models. These are input-processing languages; the sign-language output remains ISL. Tamil is also supported as an input language: it is translated to English before planning, and only English terms with signs in the ISL dataset are displayed. Translated words without a dataset sign are omitted and listed in the translation coverage message.
+The backend supports native NLP processing in 7 languages via dedicated spaCy models. These are input-processing languages; the sign-language output remains ISL. Hindi is also supported as an input language: it is translated to English before planning, and only English terms with signs in the ISL dataset are displayed. Translated words without a dataset sign are omitted and listed in the translation coverage message.
 
 | Language | spaCy Model |
 |---|---|
@@ -96,7 +96,7 @@ The `extension/` directory contains a Chrome extension that translates text into
 
 **Limitations:**
 - ISL vocabulary coverage is still expanding; unknown words may be fingerspelled when alphabet data is available.
-- Tamil text input is translated to English for ISL signing; only signs already present in the ISL dataset are shown.
+- Hindi text input is translated to English for ISL signing; only signs already present in the ISL dataset are shown.
 - Requires the kozha-translate.com backend to be running
 - YouTube mode requires captions (auto-generated or manual)
 - CWASA avatar requires WebGL (falls back to text-only gloss display)

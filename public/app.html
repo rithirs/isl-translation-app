@@ -1559,7 +1559,6 @@
                   <option value="sk">Slovak</option>
                   <option value="sl">Slovenian</option>
                   <option value="sv">Swedish</option>
-                  <option value="ta">Tamil / தமிழ்</option>
                   <option value="th">Thai</option>
                   <option value="tr">Turkish</option>
                   <option value="uk">Ukrainian</option>
@@ -2324,11 +2323,10 @@
       fa: 'Persian', ro: 'Romanian', sr: 'Serbian', sk: 'Slovak',
       sl: 'Slovenian', sv: 'Swedish', th: 'Thai', uk: 'Ukrainian',
       ur: 'Urdu', vi: 'Vietnamese', ku: 'Kurdish', kk: 'Kazakh',
-      ta: 'Tamil'
     };
 
     // Argos translate packages actually available via server._ensure_argos.
-    const ARGOS_SUPPORTED = new Set(['en','fr','de','es','pl','nl','el','ru','ar','ta']);
+    const ARGOS_SUPPORTED = new Set(['en','fr','de','es','pl','nl','el','ru','ar','hi']);
 
     const LS_SOURCE = 'kozha.lang.source';
     const LS_TARGET = 'kozha.lang.target';
@@ -2373,7 +2371,7 @@
     function translationRouteSupported(src, tgtBase) {
       if (!src || !tgtBase) return false;
       if (src === tgtBase) return true;
-      if (src === 'ta') return tgtBase === 'en';
+      if (src === 'hi') return tgtBase === 'en';
       return ARGOS_SUPPORTED.has(src) && ARGOS_SUPPORTED.has(tgtBase);
     }
 
@@ -2656,10 +2654,10 @@
           if (backend.error) { log('Backend unavailable — using local processing'); throw new Error(backend.error); }
           const backendTokens = String(backend.final||'').replace(/[.\n]/g,' ').split(/\s+/).filter(Boolean);
           const m = mapToAvailable(backendTokens, allowed, fuzzyCutoff);
-          if (getInputLang() === 'ta') {
+          if (getInputLang() === 'hi') {
             window.__datasetUnmatchedTokens = [...new Set([...m.missing, ...m.fingerspelled])];
           }
-          const displayTokens = getInputLang() === 'ta'
+          const displayTokens = getInputLang() === 'hi'
             ? m.mapped.filter(token => glossToSign.has(token))
             : (m.mapped.length ? m.mapped : backendTokens);
           if (normalizedOut) normalizedOut.value = backendTokens.join(' ');
@@ -2676,7 +2674,7 @@
         const eduTokens = await processEducationalText(raw);
         const mEdu = mapToAvailable(eduTokens, allowed, fuzzyCutoff);
         mapped = mEdu.mapped; subs = mEdu.subs; missing = mEdu.missing;
-        if (getInputLang() === 'ta') {
+        if (getInputLang() === 'hi') {
           window.__datasetUnmatchedTokens = [...new Set([...mEdu.missing, ...mEdu.fingerspelled])];
         }
         if (normalizedOut) normalizedOut.value = eduTokens.join(' ');
@@ -2687,13 +2685,13 @@
         const heur = heuristicPlan(norm);
         const mHeur = mapToAvailable(heur, allowed, fuzzyCutoff);
         mapped = mHeur.mapped; subs = mHeur.subs; missing = mHeur.missing;
-        if (getInputLang() === 'ta') {
+        if (getInputLang() === 'hi') {
           window.__datasetUnmatchedTokens = [...new Set([...mHeur.missing, ...mHeur.fingerspelled])];
         }
         if (normalizedOut) normalizedOut.value = norm.join(' ');
         if (planLog){ const lines = []; if (heur.length) lines.push('heuristic: '+heur.join(' ')); if (Object.keys(subs).length) lines.push('subs: '+JSON.stringify(subs)); if (mHeur.fingerspelled?.length) lines.push('fingerspelled: '+mHeur.fingerspelled.join(', ')); if (missing.length) lines.push('missing: '+missing.join(', ')); planLog.textContent = lines.length ? lines.join('\n') : 'planned'; }
       }
-      if (getInputLang() === 'ta') {
+      if (getInputLang() === 'hi') {
         mapped = (mapped || []).filter(token => glossToSign.has(token));
       }
       if (!mapped?.length) { log('No matching signs — fingerspelling entire phrase'); return; }
@@ -3342,9 +3340,9 @@
 
     function updateTranslationCoverageNote(translatedText) {
       if (!translationCoverageNote) return;
-      const isTamilInput = getInputLang() === 'ta';
-      translationCoverageNote.hidden = !isTamilInput;
-      if (!isTamilInput) {
+      const isHindiInput = getInputLang() === 'hi';
+      translationCoverageNote.hidden = !isHindiInput;
+      if (!isHindiInput) {
         translationCoverageNote.textContent = '';
         return;
       }

@@ -158,15 +158,15 @@ def test_unsupported_source_disables_translate(kozha_server: str) -> None:
             browser.close()
 
 
-def test_tamil_source_uses_english_meaning_and_isl_vocabulary(kozha_server: str) -> None:
-    """Tamil input translates to English and never renders non-dataset words."""
+def test_hindi_source_uses_english_meaning_and_isl_vocabulary(kozha_server: str) -> None:
+    """Hindi input translates to English and never renders non-dataset words."""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         try:
             page = browser.new_page(locale="en-US")
             page.goto(f"{kozha_server}/app.html", wait_until="domcontentloaded")
             _wait_for_db_loaded(page)
-            page.select_option("#langHint", value="ta")
+            page.select_option("#langHint", value="hi")
             expect(page.locator("#translateBtn")).to_be_enabled()
             expect(page.locator("#translationRoute")).to_contain_text("English")
 

@@ -68,13 +68,13 @@ def _ensure_argos():
                 if pkg:
                     logger.info("Installing argos translation package: %s → %s", src, tgt)
                     pkg.install()
-        if ("ta", "en") not in installed_codes:
+        if ("hi", "en") not in installed_codes:
             pkg = next(
-                (p for p in available if p.from_code == "ta" and p.to_code == "en"),
+                (p for p in available if p.from_code == "hi" and p.to_code == "en"),
                 None,
             )
             if pkg:
-                logger.info("Installing argos translation package: ta → en")
+                logger.info("Installing argos translation package: hi → en")
                 pkg.install()
         _argos_ready = True
     except Exception as e:
@@ -914,15 +914,15 @@ _SUPPORTED_SIGN_LANGS = {
 }
 # Argos packages pre-warmed in _ensure_argos(). Any source_lang or target_lang
 # outside this set is either unsupported (soft error) or a pass-through.
-_SUPPORTED_BASE_LANGS = {"en", "fr", "de", "es", "pl", "nl", "el", "ru", "ar", "ta"}
+_SUPPORTED_BASE_LANGS = {"en", "fr", "de", "es", "pl", "nl", "el", "ru", "ar", "hi"}
 
 
 def _translation_route_supported(src: str, tgt: str) -> bool:
     if src == tgt:
         return True
-    if src == "ta":
+    if src == "hi":
         return tgt == "en"
-    if tgt == "ta":
+    if tgt == "hi":
         return False
     return src in _SUPPORTED_BASE_LANGS and tgt in _SUPPORTED_BASE_LANGS
 

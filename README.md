@@ -28,7 +28,7 @@ Speech → Text → NLP Processing → HamNoSys → SiGML → 3D Animation
 
 ## Input Language Processing
 
-The backend supports native NLP processing in 7 languages via dedicated spaCy models. These are input-processing languages; the sign-language output remains ISL.
+The backend supports native NLP processing in 7 languages via dedicated spaCy models. These are input-processing languages; the sign-language output remains ISL. Tamil is also supported as an input language: it is translated to English before planning, and only English terms with signs in the ISL dataset are displayed. Translated words without a dataset sign are omitted and listed in the translation coverage message.
 
 | Language | spaCy Model |
 |---|---|
@@ -40,7 +40,7 @@ The backend supports native NLP processing in 7 languages via dedicated spaCy mo
 | Dutch | `nl_core_news_sm` |
 | Greek | `el_core_news_sm` |
 
-Languages without a dedicated spaCy model may be handled via server-side translation (Argos Translate) to English before NLP processing. Models are loaded on demand with an LRU cache (max 4 concurrent).
+Languages without a dedicated spaCy model may be handled via server-side translation (Argos Translate) to English before NLP processing. A translation route must be available in Argos Translate; if its model is missing, the translator reports that instead of presenting the source text as translated. Models are loaded on demand with an LRU cache (max 4 concurrent).
 
 ## Tech Stack
 
@@ -68,6 +68,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies (includes all spaCy language models)
 pip install -r server/requirements.txt
+pip install -r backend/chat2hamnosys/requirements.txt
 ```
 
 ### Running Locally
@@ -95,6 +96,7 @@ The `extension/` directory contains a Chrome extension that translates text into
 
 **Limitations:**
 - ISL vocabulary coverage is still expanding; unknown words may be fingerspelled when alphabet data is available.
+- Tamil text input is translated to English for ISL signing; only signs already present in the ISL dataset are shown.
 - Requires the kozha-translate.com backend to be running
 - YouTube mode requires captions (auto-generated or manual)
 - CWASA avatar requires WebGL (falls back to text-only gloss display)

@@ -35,11 +35,89 @@ from scripts.scan_unknown_hns_tags import (  # noqa: E402
     extract_known_tags,
     scan_file,
 )
+import server as server_module  # noqa: E402
 from server import app  # noqa: E402
 
 
 client = TestClient(app)
 KNOWN_TAGS = extract_known_tags()
+
+
+def test_tamil_translation_is_limited_to_english() -> None:
+    """Tamil is an input language for the ISL English gloss pipeline only."""
+    assert server_module._translation_route_supported("ta", "en")
+    assert not server_module._translation_route_supported("ta", "fr")
+    assert not server_module._translation_route_supported("en", "ta")
+
+
+def test_tamil_translate_text_returns_english(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tamil requests use the configured translator and return its English text."""
+    from argostranslate import translate
+
+    monkeypatch.setattr(server_module, "_ensure_argos", lambda: None)
+    monkeypatch.setattr(translate, "get_translation_from_codes", lambda src, tgt: object())
+    monkeypatch.setattr(translate, "translate", lambda text, src, tgt: "hello")
+    resp = client.post(
+        "/api/translate-text",
+        json={
+            "text": "வணக்கம்",
+            "source_lang": "ta",
+            "target_lang": "en",
+            "target_sign_lang": "isl",
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json()["translated"] == "hello"
+
+
+def test_tamil_translate_text_reports_missing_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A supported pair without an installed route returns an actionable error."""
+    from argostranslate import translate
+
+    monkeypatch.setattr(server_module, "_ensure_argos", lambda: None)
+    monkeypatch.setattr(translate, "get_translation_from_codes", lambda src, tgt: None)
+    resp = client.post(
+        "/api/translate-text",
+        json={
+            "text": "வணக்கம்",
+            "source_lang": "ta",
+            "target_lang": "en",
+            "target_sign_lang": "isl",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["translated"] == "வணக்கம்"
+    assert data["error"] == "No installed translation model is available from ta to en."
+
+
+def test_tamil_translation_with_installed_argos_model() -> None:
+    """Exercise the real Tamil→English Argos model when it is installed."""
+    from argostranslate import package
+
+    installed_codes = {
+        (model.from_code, model.to_code)
+        for model in package.get_installed_packages()
+    }
+    if ("ta", "en") not in installed_codes:
+        pytest.skip("Tamil→English Argos model is not installed")
+
+    resp = client.post(
+        "/api/translate-text",
+        json={
+            "text": "வணக்கம்",
+            "source_lang": "ta",
+            "target_lang": "en",
+            "target_sign_lang": "isl",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "error" not in data, data.get("error")
+    translated = data["translated"].strip().lower()
+    assert translated
+    assert translated != "வணக்கம்"
+    assert re.search(r"[a-z]", translated), f"translation is not English: {translated!r}"
 
 
 @pytest.mark.parametrize(

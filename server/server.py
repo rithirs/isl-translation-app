@@ -24,6 +24,8 @@ _CHAT2HAMNOSYS_ROOT = Path(__file__).resolve().parent.parent / "backend" / "chat
 SERVER_DIR = Path(__file__).resolve().parent
 if str(SERVER_DIR) not in sys.path:
     sys.path.insert(0, str(SERVER_DIR))
+if str(_CHAT2HAMNOSYS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_CHAT2HAMNOSYS_ROOT))
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,6 +68,14 @@ def _ensure_argos():
                 if pkg:
                     logger.info("Installing argos translation package: %s → %s", src, tgt)
                     pkg.install()
+        if ("ta", "en") not in installed_codes:
+            pkg = next(
+                (p for p in available if p.from_code == "ta" and p.to_code == "en"),
+                None,
+            )
+            if pkg:
+                logger.info("Installing argos translation package: ta → en")
+                pkg.install()
         _argos_ready = True
     except Exception as e:
         logger.warning("Could not initialize argostranslate: %s", e)
@@ -904,12 +914,16 @@ _SUPPORTED_SIGN_LANGS = {
 }
 # Argos packages pre-warmed in _ensure_argos(). Any source_lang or target_lang
 # outside this set is either unsupported (soft error) or a pass-through.
-_SUPPORTED_BASE_LANGS = {"en", "fr", "de", "es", "pl", "nl", "el", "ru", "ar"}
+_SUPPORTED_BASE_LANGS = {"en", "fr", "de", "es", "pl", "nl", "el", "ru", "ar", "ta"}
 
 
 def _translation_route_supported(src: str, tgt: str) -> bool:
     if src == tgt:
         return True
+    if src == "ta":
+        return tgt == "en"
+    if tgt == "ta":
+        return False
     return src in _SUPPORTED_BASE_LANGS and tgt in _SUPPORTED_BASE_LANGS
 
 
@@ -950,6 +964,15 @@ def api_translate_text(req: TranslateTextRequest, request: Request):
         try:
             _ensure_argos()
             from argostranslate import translate
+            if translate.get_translation_from_codes(req.source_lang, req.target_lang) is None:
+                ctx["outcome"] = "validation_error"
+                return {
+                    "translated": text,
+                    "error": (
+                        f"No installed translation model is available from "
+                        f"{req.source_lang} to {req.target_lang}."
+                    ),
+                }
             result = translate.translate(text, req.source_lang, req.target_lang)
             if not isinstance(result, str):
                 for attr in ("translatedText", "translated", "text", "translation"):

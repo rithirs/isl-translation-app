@@ -156,3 +156,49 @@ def test_unsupported_source_disables_translate(kozha_server: str) -> None:
             expect(route).not_to_contain_text("No translation path available")
         finally:
             browser.close()
+
+
+def test_tamil_source_uses_english_meaning_and_isl_vocabulary(kozha_server: str) -> None:
+    """Tamil input translates to English and never renders non-dataset words."""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        try:
+            page = browser.new_page(locale="en-US")
+            page.goto(f"{kozha_server}/app.html", wait_until="domcontentloaded")
+            _wait_for_db_loaded(page)
+            page.select_option("#langHint", value="ta")
+            expect(page.locator("#translateBtn")).to_be_enabled()
+            expect(page.locator("#translationRoute")).to_contain_text("English")
+
+            result = page.evaluate(
+                """async () => {
+                    const known = [...glossToSign.keys()].find(word => /^[a-z]+$/.test(word));
+                    if (!known) throw new Error('ISL vocabulary contains no test word');
+                    const originalFetch = window.fetch;
+                    window.fetch = async (url, options) => {
+                        if (String(url).includes('/api/plan')) {
+                            return new Response(JSON.stringify({final: known + ' zzqqxxyy'}), {
+                                status: 200,
+                                headers: {'Content-Type': 'application/json'}
+                            });
+                        }
+                        return originalFetch(url, options);
+                    };
+                    await doPlan('spacy', true, known + ' zzqqxxyy');
+                    updateTranslationCoverageNote(known + ' zzqqxxyy');
+                    return {
+                        known,
+                        tokens: window.__plannedTokens,
+                        coverageNote: document.getElementById('translationCoverageNote').textContent,
+                        coverageNoteHidden: document.getElementById('translationCoverageNote').hidden
+                    };
+                }"""
+            )
+            assert result["known"] in result["tokens"]
+            assert "zzqqxxyy" not in result["tokens"]
+            assert all(token in page.evaluate("Array.from(glossToSign.keys())") for token in result["tokens"])
+            assert result["coverageNoteHidden"] is False
+            assert "English meaning:" in result["coverageNote"]
+            assert "No ISL dataset sign for: zzqqxxyy." in result["coverageNote"]
+        finally:
+            browser.close()

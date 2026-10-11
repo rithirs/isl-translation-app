@@ -916,6 +916,12 @@
     .coverage-counter {
       min-height: 18px;
     }
+    .translation-coverage-note {
+      margin-top: 6px;
+      color: var(--kozha-color-ink-2, var(--ink-2));
+      font-size: 13px;
+      line-height: 1.45;
+    }
 
     /* Prompt-polish 10 §13: honor prefers-reduced-motion everywhere we
        added new motion. */
@@ -1553,6 +1559,7 @@
                   <option value="sk">Slovak</option>
                   <option value="sl">Slovenian</option>
                   <option value="sv">Swedish</option>
+                  <option value="ta">Tamil / தமிழ்</option>
                   <option value="th">Thai</option>
                   <option value="tr">Turkish</option>
                   <option value="uk">Ukrainian</option>
@@ -1800,6 +1807,7 @@
              an accessible label is the correct container role. -->
         <div class="token-list" id="tokenList" role="group" aria-label="Signed tokens. Press Enter on a chip to inspect."></div>
         <div class="coverage-counter" id="coverageCounter" role="status" aria-live="polite"></div>
+        <div class="translation-coverage-note" id="translationCoverageNote" role="status" aria-live="polite" hidden></div>
         <!-- Prompt-polish 6: per-token detail panel. Hidden by default; the
              chip list opens this when a chip is activated (click or Enter).
              Shows gloss + source database + Reviewed / Not yet reviewed
@@ -2315,11 +2323,12 @@
       lv: 'Latvian', lt: 'Lithuanian', ms: 'Malay', no: 'Norwegian',
       fa: 'Persian', ro: 'Romanian', sr: 'Serbian', sk: 'Slovak',
       sl: 'Slovenian', sv: 'Swedish', th: 'Thai', uk: 'Ukrainian',
-      ur: 'Urdu', vi: 'Vietnamese', ku: 'Kurdish', kk: 'Kazakh'
+      ur: 'Urdu', vi: 'Vietnamese', ku: 'Kurdish', kk: 'Kazakh',
+      ta: 'Tamil'
     };
 
     // Argos translate packages actually available via server._ensure_argos.
-    const ARGOS_SUPPORTED = new Set(['en','fr','de','es','pl','nl','el','ru','ar']);
+    const ARGOS_SUPPORTED = new Set(['en','fr','de','es','pl','nl','el','ru','ar','ta']);
 
     const LS_SOURCE = 'kozha.lang.source';
     const LS_TARGET = 'kozha.lang.target';
@@ -2364,6 +2373,7 @@
     function translationRouteSupported(src, tgtBase) {
       if (!src || !tgtBase) return false;
       if (src === tgtBase) return true;
+      if (src === 'ta') return tgtBase === 'en';
       return ARGOS_SUPPORTED.has(src) && ARGOS_SUPPORTED.has(tgtBase);
     }
 
@@ -2460,6 +2470,7 @@
 
     async function translateText(text, srcLang, tgtLang, tgtSignLang) {
       if (!text.trim() || srcLang === tgtLang) return text;
+      window.__lastTranslationError = '';
       try {
         const resp = await fetch('/api/translate-text', {
           method: 'POST',
@@ -2475,6 +2486,7 @@
         if (!resp.ok) throw new Error('Translation request failed: ' + resp.status);
         const data = await resp.json();
         if (data && data.error) {
+          window.__lastTranslationError = data.error;
           log('Translation error: ' + data.error);
           renderStatus.textContent = 'Translation unavailable — ' + data.error;
           renderStatus.className = 'status-badge';
@@ -2487,7 +2499,8 @@
         }
         return (raw || text).trim();
       } catch (err) {
-        log('Translation failed — continuing with original text');
+        window.__lastTranslationError = (err && err.message) || String(err);
+        log('Translation failed: ' + window.__lastTranslationError);
         renderStatus.textContent = 'Translation unavailable — using original text';
         renderStatus.className = 'status-badge';
         return text;
@@ -2606,6 +2619,7 @@
     function currentAllowed(){ return Array.from(glossToSign.keys()).sort(); }
 
     async function doPlan(mode, wasTranslated, planText) {
+      window.__datasetUnmatchedTokens = [];
       // planText, when provided, is the internally-translated text to plan
       // from. The visible textarea (textIn) always keeps the user's source
       // language, so we plan from planText rather than reading it back out.
@@ -2642,7 +2656,12 @@
           if (backend.error) { log('Backend unavailable — using local processing'); throw new Error(backend.error); }
           const backendTokens = String(backend.final||'').replace(/[.\n]/g,' ').split(/\s+/).filter(Boolean);
           const m = mapToAvailable(backendTokens, allowed, fuzzyCutoff);
-          const displayTokens = m.mapped.length ? m.mapped : backendTokens;
+          if (getInputLang() === 'ta') {
+            window.__datasetUnmatchedTokens = [...new Set([...m.missing, ...m.fingerspelled])];
+          }
+          const displayTokens = getInputLang() === 'ta'
+            ? m.mapped.filter(token => glossToSign.has(token))
+            : (m.mapped.length ? m.mapped : backendTokens);
           if (normalizedOut) normalizedOut.value = backendTokens.join(' ');
           if (planLog){ const lines = ['spacy-backend']; if (Object.keys(m.subs).length) lines.push('subs: '+JSON.stringify(m.subs)); if (m.fingerspelled?.length) lines.push('fingerspelled: '+m.fingerspelled.join(', ')); if (m.missing.length) lines.push('missing: '+m.missing.join(', ')); planLog.textContent = lines.join('\n'); }
           if (tokensOut) tokensOut.value = displayTokens.join(' ');
@@ -2657,6 +2676,9 @@
         const eduTokens = await processEducationalText(raw);
         const mEdu = mapToAvailable(eduTokens, allowed, fuzzyCutoff);
         mapped = mEdu.mapped; subs = mEdu.subs; missing = mEdu.missing;
+        if (getInputLang() === 'ta') {
+          window.__datasetUnmatchedTokens = [...new Set([...mEdu.missing, ...mEdu.fingerspelled])];
+        }
         if (normalizedOut) normalizedOut.value = eduTokens.join(' ');
         if (planLog){ const lines = ['edu-nlp']; if (Object.keys(subs).length) lines.push('subs: '+JSON.stringify(subs)); if (mEdu.fingerspelled?.length) lines.push('fingerspelled: '+mEdu.fingerspelled.join(', ')); if (missing.length) lines.push('missing: '+missing.join(', ')); planLog.textContent = lines.join('\n'); }
       }
@@ -2665,8 +2687,14 @@
         const heur = heuristicPlan(norm);
         const mHeur = mapToAvailable(heur, allowed, fuzzyCutoff);
         mapped = mHeur.mapped; subs = mHeur.subs; missing = mHeur.missing;
+        if (getInputLang() === 'ta') {
+          window.__datasetUnmatchedTokens = [...new Set([...mHeur.missing, ...mHeur.fingerspelled])];
+        }
         if (normalizedOut) normalizedOut.value = norm.join(' ');
         if (planLog){ const lines = []; if (heur.length) lines.push('heuristic: '+heur.join(' ')); if (Object.keys(subs).length) lines.push('subs: '+JSON.stringify(subs)); if (mHeur.fingerspelled?.length) lines.push('fingerspelled: '+mHeur.fingerspelled.join(', ')); if (missing.length) lines.push('missing: '+missing.join(', ')); planLog.textContent = lines.length ? lines.join('\n') : 'planned'; }
+      }
+      if (getInputLang() === 'ta') {
+        mapped = (mapped || []).filter(token => glossToSign.has(token));
       }
       if (!mapped?.length) { log('No matching signs — fingerspelling entire phrase'); return; }
       if (tokensOut) tokensOut.value = mapped.join(' ');
@@ -2792,6 +2820,7 @@
 
     const translateBtn = document.getElementById('translateBtn');
     const tokenList = document.getElementById('tokenList');
+    const translationCoverageNote = document.getElementById('translationCoverageNote');
     const playbackProgress = document.getElementById('playbackProgress');
     const playbackProgressBar = document.getElementById('playbackProgressBar');
 
@@ -3311,6 +3340,20 @@
       el.innerHTML = parts.join(' · ');
     }
 
+    function updateTranslationCoverageNote(translatedText) {
+      if (!translationCoverageNote) return;
+      const isTamilInput = getInputLang() === 'ta';
+      translationCoverageNote.hidden = !isTamilInput;
+      if (!isTamilInput) {
+        translationCoverageNote.textContent = '';
+        return;
+      }
+      const unmatched = [...new Set(window.__datasetUnmatchedTokens || [])];
+      translationCoverageNote.textContent = unmatched.length
+        ? 'English meaning: ' + translatedText + '. No ISL dataset sign for: ' + unmatched.join(', ') + '.'
+        : 'English meaning: ' + translatedText + '. All planned words have signs in the ISL dataset.';
+    }
+
     // -------------------------------------------------------------------
     // Prompt-polish 10 §1: loading indicator with a 200ms threshold. Under
     // 200ms the bar never appears — avoids the flicker-spinner tax on
@@ -3406,6 +3449,10 @@
       clearPlaybackUI();
       tokenList.innerHTML = '';
       updateCoverageCounter(null);
+      if (translationCoverageNote) {
+        translationCoverageNote.hidden = true;
+        translationCoverageNote.textContent = '';
+      }
       SignSequencer.stop();
       announceTranslator('Translating');
       try {
@@ -3424,9 +3471,10 @@
           log('Translation failed — using original text');
           ErrorPanel.show({
             title: 'Translation failed.',
-            message: 'We could not translate from ' + (BASE_LANG_NAMES[getInputLang()] || getInputLang()) +
-                     ' to ' + (BASE_LANG_NAMES[getTargetLang()] || getTargetLang()) +
-                     '. Try again, or switch to a supported language pair.',
+            message: window.__lastTranslationError ||
+                     ('We could not translate from ' + (BASE_LANG_NAMES[getInputLang()] || getInputLang()) +
+                      ' to ' + (BASE_LANG_NAMES[getTargetLang()] || getTargetLang()) +
+                      '. Try again, or switch to a supported language pair.'),
             onRetry: runTranslateFlow,
           });
           renderStatus.textContent = 'Translation unavailable — using original text';
@@ -3436,6 +3484,7 @@
         // Translation stays internal: the textarea keeps the user's source
         // language; only the planner sees the translated text.
         await doPlan('spacy', translationExpected, translated);
+        if (!translationFailed) updateTranslationCoverageNote(translated);
         const toks = window.__plannedTokens || [];
         if (!toks.length) {
           renderStatus.textContent = 'No matching signs found.';

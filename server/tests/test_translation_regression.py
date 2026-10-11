@@ -18,6 +18,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 from xml.etree import ElementTree
 
 import pytest
@@ -55,7 +56,17 @@ def test_tamil_translate_text_returns_english(monkeypatch: pytest.MonkeyPatch) -
     from argostranslate import translate
 
     monkeypatch.setattr(server_module, "_ensure_argos", lambda: None)
-    monkeypatch.setattr(translate, "get_translation_from_codes", lambda src, tgt: object())
+    monkeypatch.setattr(
+        translate,
+        "get_installed_languages",
+        lambda: [
+            SimpleNamespace(
+                code="ta",
+                get_translation=lambda target: object() if target.code == "en" else None,
+            ),
+            SimpleNamespace(code="en", get_translation=lambda target: None),
+        ],
+    )
     monkeypatch.setattr(translate, "translate", lambda text, src, tgt: "hello")
     resp = client.post(
         "/api/translate-text",
@@ -75,7 +86,41 @@ def test_tamil_translate_text_reports_missing_model(monkeypatch: pytest.MonkeyPa
     from argostranslate import translate
 
     monkeypatch.setattr(server_module, "_ensure_argos", lambda: None)
-    monkeypatch.setattr(translate, "get_translation_from_codes", lambda src, tgt: None)
+    monkeypatch.setattr(
+        translate,
+        "get_installed_languages",
+        lambda: [SimpleNamespace(code="en", get_translation=lambda target: None)],
+    )
+    resp = client.post(
+        "/api/translate-text",
+        json={
+            "text": "வணக்கம்",
+            "source_lang": "ta",
+            "target_lang": "en",
+            "target_sign_lang": "isl",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["translated"] == "வணக்கம்"
+    assert data["error"] == "No installed translation model is available from ta to en."
+
+
+def test_tamil_translate_text_reports_missing_translation_pair(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Installed language codes without a ta→en model are reported cleanly."""
+    from argostranslate import translate
+
+    monkeypatch.setattr(server_module, "_ensure_argos", lambda: None)
+    monkeypatch.setattr(
+        translate,
+        "get_installed_languages",
+        lambda: [
+            SimpleNamespace(code="ta", get_translation=lambda target: None),
+            SimpleNamespace(code="en", get_translation=lambda target: None),
+        ],
+    )
     resp = client.post(
         "/api/translate-text",
         json={

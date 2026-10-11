@@ -964,7 +964,17 @@ def api_translate_text(req: TranslateTextRequest, request: Request):
         try:
             _ensure_argos()
             from argostranslate import translate
-            if translate.get_translation_from_codes(req.source_lang, req.target_lang) is None:
+            installed_languages = {
+                language.code: language
+                for language in translate.get_installed_languages()
+            }
+            source_language = installed_languages.get(req.source_lang)
+            target_language = installed_languages.get(req.target_lang)
+            if (
+                source_language is None
+                or target_language is None
+                or source_language.get_translation(target_language) is None
+            ):
                 ctx["outcome"] = "validation_error"
                 return {
                     "translated": text,
